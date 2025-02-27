@@ -19,6 +19,31 @@ public class MenuItem {
     @Enumerated(EnumType.STRING)
     private Size size;
     private Boolean isAvailable;
+    private String imageUrl;
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
+    }
+
+    public List<Cart> getCartEntries() {
+        return cartEntries;
+    }
+
+    public void setCartEntries(List<Cart> cartEntries) {
+        this.cartEntries = cartEntries;
+    }
 
     @OneToMany(mappedBy = "menuItem")
     private List<OrderItem> orderItems;
@@ -28,13 +53,14 @@ public class MenuItem {
 
     public MenuItem() {
     }
-    public MenuItem(String name, String description, BigDecimal price, MenuItemCategory category, Size size, Boolean isAvailable) {
+    public MenuItem(String name, String description, BigDecimal price, MenuItemCategory category, Size size, Boolean isAvailable, String imageUrl) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.category = category;
         this.size = size;
         this.isAvailable = isAvailable;
+        this.imageUrl = imageUrl;
 
     }
 

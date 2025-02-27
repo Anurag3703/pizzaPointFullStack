@@ -4,6 +4,7 @@ import com.example.fullstack.database.model.MenuItem;
 import com.example.fullstack.database.model.MenuItemCategory;
 import com.example.fullstack.database.model.Size;
 import com.example.fullstack.database.service.implementation.MenuItemServiceImpl;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +17,7 @@ public class MenuItemController {
     public MenuItemController(MenuItemServiceImpl menuItemServiceImpl) {
         this.menuItemServiceImpl = menuItemServiceImpl;
     }
+
 
     @PostMapping
     public String addMenuItems(@RequestBody MenuItem menuItem) {
