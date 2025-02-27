@@ -1,25 +1,35 @@
 package com.example.fullstack.database.model;
 
+import com.example.fullstack.security.model.UserSecurity;
 import jakarta.persistence.*;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
+@Table(name = "users")
 @Entity
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
     private String name;
     private String address;
     private String phone;
     private String email;
-    private String password;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id")
+    private UserSecurity userSecurity;
 
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    public UserSecurity getUserSecurity() {
+        return userSecurity;
+    }
+
+    public void setUserSecurity(UserSecurity userSecurity) {
+        this.userSecurity = userSecurity;
+    }
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Orders> orders;
@@ -35,22 +45,29 @@ public class User {
     }
 
     // All-args constructor
-    public User(int id, String name, String address, String phone, String email, String password, Role role) {
+    public User(UUID id, String name, String address, String phone, String email) {
         this.id = id;
         this.name = name;
         this.address = address;
         this.phone = phone;
         this.email = email;
-        this.password = password;
-        this.role = role;
+
+
+    }
+
+    public User(String name, String address, String phone, String email) {
+        this.name = name;
+        this.address = address;
+        this.phone = phone;
+        this.email = email;
     }
 
     // Getters and setters
-    public int getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -86,21 +103,9 @@ public class User {
         this.email = email;
     }
 
-    public String getPassword() {
-        return password;
-    }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
 
-    public Role getRole() {
-        return role;
-    }
 
-    public void setRole(Role role) {
-        this.role = role;
-    }
 
     // toString method
     @Override
@@ -111,8 +116,8 @@ public class User {
                 ", address='" + address + '\'' +
                 ", phone='" + phone + '\'' +
                 ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                ", role=" + role +
+
+
                 '}';
     }
 
@@ -126,13 +131,13 @@ public class User {
                 Objects.equals(name, user.name) &&
                 Objects.equals(address, user.address) &&
                 Objects.equals(phone, user.phone) &&
-                Objects.equals(email, user.email) &&
-                Objects.equals(password, user.password) &&
-                role == user.role;
+                Objects.equals(email, user.email) ;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, address, phone, email, password, role);
+        return Objects.hash(id, name, address, phone, email);
     }
+
+
 }

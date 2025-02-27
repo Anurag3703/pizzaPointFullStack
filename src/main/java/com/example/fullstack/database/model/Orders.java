@@ -125,6 +125,14 @@ public class Orders {
         this.paymentMethod = paymentMethod;
     }
 
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
+    }
+
     // toString method
     @Override
     public String toString() {
@@ -163,4 +171,6 @@ public class Orders {
     public int hashCode() {
         return Objects.hash(id, totalPrice, status, date, address, createdAt, updatedAt, user, paymentMethod);
     }
+
+
 }

@@ -1,20 +1,31 @@
 package com.example.fullstack.database.service.implementation;
 
+import com.example.fullstack.database.model.OrderItem;
 import com.example.fullstack.database.model.Orders;
+import com.example.fullstack.database.model.Status;
+import com.example.fullstack.database.model.User;
+import com.example.fullstack.database.repository.OrderItemRepository;
 import com.example.fullstack.database.repository.OrdersRepository;
 import com.example.fullstack.database.service.OrdersService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class OrdersServiceImpl implements OrdersService {
 
+    private final OrderItemRepository orderItemRepository;
     OrdersRepository ordersRepository;
 
-    public OrdersServiceImpl(OrdersRepository ordersRepository) {
+
+
+    public OrdersServiceImpl(OrdersRepository ordersRepository, OrderItemRepository orderItemRepository) {
         this.ordersRepository = ordersRepository;
+        this.orderItemRepository = orderItemRepository;
     }
 
 
@@ -28,4 +39,63 @@ public class OrdersServiceImpl implements OrdersService {
     public List<Orders> addAllOrders(List<Orders> orders) {
         return ordersRepository.saveAll(orders);
     }
+
+    @Override
+    public void updateOrder(Orders order) {
+        ordersRepository.save(order);
+    }
+
+    @Override
+    public void updateOrderStatus(Long orderId, Status status) {
+        Orders order = ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found" + orderId));
+
+        order.setStatus(status);
+        ordersRepository.save(order);
+    }
+
+    @Override
+    public Orders processCheckout(List<OrderItem> orderItems) {
+        User user = getCurrentUser();
+        Orders order = new Orders();
+        order.setUser(user);
+        order.setStatus(Status.PENDING);
+        order.setCreatedAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
+
+
+        BigDecimal totalPrice = calculateTotalPrice(orderItems);
+        order.setTotalPrice(totalPrice);
+        Orders readyOrder = ordersRepository.save(order);
+
+        for(OrderItem orderItem : orderItems) {
+            orderItem.setOrder(readyOrder);
+            orderItem.setTotalPrice(orderItem.getTotalPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())));
+            orderItem.setQuantity(orderItem.getQuantity()); //maybe we can remove it.
+            orderItemRepository.save(orderItem);
+        }
+
+
+        return readyOrder;
+    }
+
+    @Override
+    public Orders getOrderById(Long orderId) {
+        return ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found" + orderId));
+    }
+
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null) {
+            return (User) authentication.getPrincipal(); // Assuming UserDetails is being used
+        }
+        throw new RuntimeException("No authenticated user found");
+    }
+
+    private BigDecimal calculateTotalPrice(List<OrderItem> orderItems) {
+        return orderItems.stream()
+                .map(item -> item.getPricePerItem().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+
 }

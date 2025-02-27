@@ -8,5 +8,11 @@ public enum Status {
     DELIVERED,        // Pizza has been delivered successfully
     COMPLETED,        // Order is completed (could be used to mark final status after delivery)
     CANCELLED,        // Order has been cancelled by the customer or system
-    FAILED
+    FAILED;
+
+
+
+    public String toUpperCase() {
+         return this.name().toUpperCase();
+    }
 }
