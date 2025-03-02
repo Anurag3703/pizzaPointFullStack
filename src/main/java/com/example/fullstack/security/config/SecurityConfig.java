@@ -5,10 +5,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,10 +41,14 @@ public class SecurityConfig {
                 //    .httpBasic(Customizer.withDefaults())
                 .cors(cors->    cors.configurationSource(corsConfigurationSource()))
                 .addFilterBefore(jwtValidationFilter, UsernamePasswordAuthenticationFilter.class)
-                //.authorizeHttpRequests(auth -> auth
+                //.authorizeHttpRequests(auth->auth.requestMatchers("/api/cart/**").hasRole("USER"))
+                .sessionManagement((session) -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        //.authorizeHttpRequests(auth -> auth
                       //  .requestMatchers("/api/menuItem/").hasRole("USER")
                       //  .anyRequest().permitAll())
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+
                 .csrf(AbstractHttpConfigurer::disable)
                 .build();
     }

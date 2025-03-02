@@ -26,53 +26,6 @@ public class OrderItemServiceImpl implements OrderItemService {
 
     }
 
-    @Override
-    public void increaseItemQuantity(Long orderId, Long menuItemId, Integer quantity) {
-        Orders order = ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
-        OrderItem orderItem = order.getOrderItems().stream()
-                .filter(item -> item.getMenuItem().getId().equals(String.valueOf(item.getId())))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Order item not found"));
 
-        orderItem.setQuantity(orderItem.getQuantity() + quantity);
-        ordersRepository.save(order);
-        updateOrderTotalPrice(order);
-
-    }
-    @Override
-    public void decreaseItemQuantity(Long orderId, Long menuItemId, Integer quantity) {
-        Orders order = ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
-        OrderItem orderItem = order.getOrderItems().stream()
-                .filter(item -> item.getMenuItem().getId().equals(String.valueOf(item.getId())))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Order item not found"));
-
-        if (orderItem.getQuantity() > quantity) {
-            orderItem.setQuantity(orderItem.getQuantity() - quantity);
-
-        } else {
-            // for 0 quantity..
-            order.getOrderItems().remove(orderItem);
-            orderItemRepository.delete(orderItem);
-        }
-        orderItemRepository.save(orderItem);
-        updateOrderTotalPrice(order);
-
-    }
-
-    @Override
-    public void updateOrderTotalPrice(Orders order) {
-        if (order.getOrderItems() != null && !order.getOrderItems().isEmpty()) {
-            BigDecimal totalPrice = order.getOrderItems().stream()
-                    .map(OrderItem::getTotalPrice)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            order.setTotalPrice(totalPrice);
-            ordersRepository.save(order);
-        } else {
-            order.setTotalPrice(BigDecimal.ZERO);
-            ordersRepository.save(order);
-        }
-    }
 
 }

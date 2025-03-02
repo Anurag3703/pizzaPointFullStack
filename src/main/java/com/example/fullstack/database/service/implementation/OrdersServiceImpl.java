@@ -58,15 +58,15 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    public Orders processCheckout(PaymentMethod paymentMethod, String address, HttpSession session) {
-        User user = (User) session.getAttribute("user");
+    public Orders processCheckout(PaymentMethod paymentMethod, String address) {
+        User user = getCurrentUser();
 
         if (user == null) {
             throw new RuntimeException("No user is logged in");
         }
 
-        // Retrieve the cart from the session, assuming it's stored there
-        List<Cart> cartItems = (List<Cart>) session.getAttribute("cart");
+        // Retrieve the cart items for the current user from the database
+        List<Cart> cartItems = cartRepository.findByUser(user);
 
         if (cartItems == null || cartItems.isEmpty()) {
             throw new RuntimeException("No items in the cart to checkout");
@@ -95,8 +95,8 @@ public class OrdersServiceImpl implements OrdersService {
             createOrderItemFromCart(cartItem, order);
         }
 
-        // Clear the cart in the session after successful checkout
-        session.removeAttribute("cart");
+        // Clear the cart items for the user after successful checkout
+        cartRepository.deleteByUser(user);
 
         return order;
     }
