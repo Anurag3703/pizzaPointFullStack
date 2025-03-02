@@ -7,6 +7,7 @@ import com.example.fullstack.database.service.OrdersService;
 import com.example.fullstack.database.service.implementation.EmailService;
 import com.example.fullstack.database.service.implementation.OrderItemServiceImpl;
 import com.example.fullstack.database.service.implementation.OrdersServiceImpl;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.parameters.P;
@@ -80,10 +81,10 @@ public class OrdersController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<?> checkout(@RequestParam PaymentMethod paymentMethod, @RequestParam String address) {
+    public ResponseEntity<?> checkout(@RequestParam PaymentMethod paymentMethod, @RequestParam String address, HttpSession session) {
         try {
             // Call the service to process the checkout
-            ordersServiceImpl.processCheckout(paymentMethod,address);
+            ordersServiceImpl.processCheckout(paymentMethod,address,session);
 
             return ResponseEntity.ok("Order placed successfully!");
         } catch (Exception e) {

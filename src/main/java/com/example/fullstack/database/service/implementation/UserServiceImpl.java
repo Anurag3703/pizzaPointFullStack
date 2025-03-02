@@ -3,6 +3,8 @@ package com.example.fullstack.database.service.implementation;
 import com.example.fullstack.database.model.User;
 import com.example.fullstack.database.repository.UserRepository;
 import com.example.fullstack.database.service.UserService;
+import com.example.fullstack.security.model.UserSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -39,17 +41,17 @@ public class UserServiceImpl implements UserService {
         return userRepository.saveAll(users);
     }
 
-    @Override
     public User getCurrentUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        if (principal instanceof UserDetails userDetails) {
-            // If the principal is of type UserDetails, cast it
-            return (User) userDetails; // Return the User object (make sure your User implements UserDetails)
-        } else {
-            throw new RuntimeException("User is not authenticated");
+        if (principal instanceof UserDetails) {
+            String username = ((UserDetails) principal).getUsername();
+            return userRepository.findByEmail(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
         }
+        throw new RuntimeException("User not authenticated");
+    }
     }
 
 
-}
+

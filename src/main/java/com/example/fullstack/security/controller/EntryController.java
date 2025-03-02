@@ -16,6 +16,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -69,33 +70,43 @@ public class EntryController {
             }
 
 
-            UserSecurity user = new UserSecurity();
+            // Create and save the UserSecurity
+            UserSecurity userSecurity = new UserSecurity();
+            userSecurity.setEmail(signupRequest.getEmail());
+            userSecurity.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+            userSecurity.setRole("USER");
+            UserSecurity savedUserSecurity = securityUserRepository.save(userSecurity);
+
+
+            User user = new User();
             user.setEmail(signupRequest.getEmail());
-            user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
-            user.setRole("USER");
-            UserSecurity savedUser = securityUserRepository.save(user);
+            user.setName(signupRequest.getName());
+            user.setAddress(signupRequest.getAddress());
+            user.setPhone(signupRequest.getPhone());
 
-            User users = new User();
-            users.setEmail(signupRequest.getEmail());
-            users.setAddress(signupRequest.getAddress());
-            users.setName(signupRequest.getName());
-            users.setPhone(signupRequest.getPhone());
+            user.setUserSecurity(savedUserSecurity);
 
-            users.setUserSecurity(savedUser);
 
-            // Save the User object in the database
-            userRepository.save(users);
+            savedUserSecurity.setUser(user);
 
+
+            userRepository.save(user);
 
             // Authenticate the user to generate the JWT token
-            Authentication authentication = new UsernamePasswordAuthenticationToken(savedUser.getEmail(), signupRequest.getPassword());
+            Authentication authentication = new UsernamePasswordAuthenticationToken(userSecurity.getEmail(), signupRequest.getPassword());
             Authentication authenticated = authenticationManager.authenticate(authentication);
             // Token
             String token = jwtTokenUtil.generateToken((UserSecurity) authenticated.getPrincipal());
-            return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponse(token, savedUser.getEmail()));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponse(token, userSecurity.getEmail()));
 
         }catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during signup. Please try again later.");
         }
+    }
+
+    @GetMapping("/test-auth")
+    public ResponseEntity<?> testAuth() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return ResponseEntity.ok("Authenticated User: " + authentication.getName());
     }
 }

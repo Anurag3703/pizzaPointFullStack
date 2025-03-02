@@ -14,12 +14,21 @@ public class Cart {
     private int id;
     private Long quantity;
     private BigDecimal totalPrice;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "menu_item_id", nullable = false)
     private MenuItem menuItem;
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
     private LocalDateTime createdAt;
 
 
@@ -32,7 +41,7 @@ public class Cart {
     }
 
 
-    public Cart(int id, Long quantity, User user, MenuItem menuItem, LocalDateTime createdAt) {
+    public Cart(int id, Long quantity,  MenuItem menuItem,User user, LocalDateTime createdAt) {
         this.id = id;
         this.quantity = quantity;
         this.user = user;
@@ -60,13 +69,9 @@ public class Cart {
         this.quantity = quantity;
     }
 
-    public User getUser() {
-        return user;
-    }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
+
+
 
     public MenuItem getMenuItem() {
         return menuItem;
@@ -92,25 +97,13 @@ public class Cart {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Cart cart = (Cart) o;
-        return id == cart.id && Objects.equals(quantity, cart.quantity) && Objects.equals(user, cart.user) && Objects.equals(menuItem, cart.menuItem) && Objects.equals(createdAt, cart.createdAt);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, quantity, user, menuItem, createdAt);
-    }
-
-    @Override
     public String toString() {
         return "Cart{" +
                 "id=" + id +
                 ", quantity=" + quantity +
-                ", user=" + user +
+                ", totalPrice=" + totalPrice +
                 ", menuItem=" + menuItem +
+                ", user=" + user +
                 ", createdAt=" + createdAt +
                 '}';
     }
