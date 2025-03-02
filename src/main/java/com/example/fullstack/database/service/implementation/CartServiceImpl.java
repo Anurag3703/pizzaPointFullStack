@@ -7,10 +7,10 @@ import com.example.fullstack.database.repository.CartRepository;
 import com.example.fullstack.database.repository.MenuItemRepository;
 import com.example.fullstack.database.service.CartService;
 import com.example.fullstack.database.service.UserService;
-import jakarta.persistence.OneToMany;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class CartServiceImpl implements CartService {
@@ -36,6 +36,11 @@ public class CartServiceImpl implements CartService {
         cartItem.setQuantity(quantity);
         cartItem.setUser(user);
 
+
+        BigDecimal totalPrice = menuItem.getPrice().multiply(BigDecimal.valueOf(quantity));
+        cartItem.setTotalPrice(totalPrice);
+
+
         cartRepository.save(cartItem);
     }
 
@@ -49,10 +54,26 @@ public class CartServiceImpl implements CartService {
         }
 
         // Update the quantity
+        BigDecimal totalPrice = cartItem.getPricePerItem().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
         cartItem.setQuantity(quantity);
-
-        // Recalculate the total price for the cart item if necessary (if your total price logic is in the CartItem)
+        cartItem.setTotalPrice(totalPrice);
         cartRepository.save(cartItem);
 
+
+
+
     }
+
+    @Override
+    public BigDecimal getCartTotalPrice(Long userId) {
+
+        List<Cart> cartItems = cartRepository.findByUserId(userId);
+
+        // Calculate the total price by summing all cart item total prices
+        return cartItems.stream()
+                .map(Cart::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+
 }
