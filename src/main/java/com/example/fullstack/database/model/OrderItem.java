@@ -13,7 +13,7 @@ public class OrderItem {
     private Long id;
     private Long quantity;
     private BigDecimal pricePerItem;
-    private BigDecimal totalPrice;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     private Orders order;
@@ -24,11 +24,10 @@ public class OrderItem {
     public OrderItem() {
     }
 
-    public OrderItem(Long id, Long quantity, BigDecimal pricePerItem, BigDecimal totalPrice, Orders order, MenuItem menuItem) {
+    public OrderItem(Long id, Long quantity, BigDecimal pricePerItem, Orders order, MenuItem menuItem) {
         this.id = id;
         this.quantity = quantity;
         this.pricePerItem = pricePerItem;
-        this.totalPrice = totalPrice;
         this.order = order;
         this.menuItem = menuItem;
     }
@@ -58,12 +57,10 @@ public class OrderItem {
     }
 
     public BigDecimal getTotalPrice() {
-        return totalPrice;
+        return  pricePerItem.multiply(new BigDecimal(quantity));
     }
 
-    public void setTotalPrice(BigDecimal totalPrice) {
-        this.totalPrice = totalPrice;
-    }
+
 
     public Orders getOrder() {
         return order;
@@ -86,12 +83,12 @@ public class OrderItem {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OrderItem orderItem = (OrderItem) o;
-        return id == orderItem.id && Objects.equals(quantity, orderItem.quantity) && Objects.equals(pricePerItem, orderItem.pricePerItem) && Objects.equals(totalPrice, orderItem.totalPrice) && Objects.equals(order, orderItem.order) && Objects.equals(menuItem, orderItem.menuItem);
+        return id == orderItem.id && Objects.equals(quantity, orderItem.quantity) && Objects.equals(pricePerItem, orderItem.pricePerItem) &&  Objects.equals(order, orderItem.order) && Objects.equals(menuItem, orderItem.menuItem);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, quantity, pricePerItem, totalPrice, order, menuItem);
+        return Objects.hash(id, quantity, pricePerItem, order, menuItem);
     }
 
     @Override
@@ -100,7 +97,6 @@ public class OrderItem {
                 "id=" + id +
                 ", quantity=" + quantity +
                 ", pricePerItem=" + pricePerItem +
-                ", totalPrice=" + totalPrice +
                 ", order=" + order +
                 ", menuItem=" + menuItem +
                 '}';

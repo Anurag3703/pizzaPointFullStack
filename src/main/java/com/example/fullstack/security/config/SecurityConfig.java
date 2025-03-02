@@ -36,7 +36,7 @@ public class SecurityConfig {
             //    .httpBasic(Customizer.withDefaults())
                 .addFilterBefore(jwtValidationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/menuItem/**").hasRole("USER")
+                        .requestMatchers("/api/**").hasRole("USER")
                         .anyRequest().permitAll())
 
                 .csrf(AbstractHttpConfigurer::disable)

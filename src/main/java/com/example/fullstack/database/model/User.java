@@ -1,6 +1,7 @@
 package com.example.fullstack.database.model;
 
 import com.example.fullstack.security.model.UserSecurity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -13,13 +14,15 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+
+    private Long id;
     private String name;
     private String address;
     private String phone;
     private String email;
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
+    @JsonBackReference   //forward side of the relationship
     private UserSecurity userSecurity;
 
 
@@ -45,7 +48,7 @@ public class User {
     }
 
     // All-args constructor
-    public User(UUID id, String name, String address, String phone, String email) {
+    public User(Long id, String name, String address, String phone, String email) {
         this.id = id;
         this.name = name;
         this.address = address;
@@ -53,21 +56,24 @@ public class User {
         this.email = email;
 
 
+
     }
 
     public User(String name, String address, String phone, String email) {
+
         this.name = name;
         this.address = address;
         this.phone = phone;
         this.email = email;
+
     }
 
     // Getters and setters
-    public UUID getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Long  id) {
         this.id = id;
     }
 
@@ -103,7 +109,11 @@ public class User {
         this.email = email;
     }
 
-
+    public class UUIDGenerator {
+        public static String generateUUID() {
+            return UUID.randomUUID().toString();  // Generates a UUID in string format
+        }
+    }
 
 
 

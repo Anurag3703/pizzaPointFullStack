@@ -2,6 +2,8 @@ package com.example.fullstack.security.model;
 
 
 import com.example.fullstack.database.model.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,6 +24,7 @@ public class UserSecurity implements UserDetails {
     private String password;
     private String role;
     @OneToOne(mappedBy = "userSecurity",cascade = CascadeType.ALL)
+    @JsonManagedReference //backward side of the relationship
     private User user;
 
     public User getUser() {
