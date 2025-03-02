@@ -6,6 +6,7 @@ import com.example.fullstack.database.repository.MenuItemRepository;
 import com.example.fullstack.database.repository.OrderItemRepository;
 import com.example.fullstack.database.repository.OrdersRepository;
 import com.example.fullstack.database.service.OrdersService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -57,22 +58,27 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    public Orders processCheckout(PaymentMethod paymentMethod,String address) {
-        User user = getCurrentUser();
+    public Orders processCheckout(PaymentMethod paymentMethod, String address, HttpSession session) {
+        User user = (User) session.getAttribute("user");
 
-        List<Cart> cartItems = cartRepository.findByUserId(user.getId());
+        if (user == null) {
+            throw new RuntimeException("No user is logged in");
+        }
 
-        if (cartItems.isEmpty()) {
+        // Retrieve the cart from the session, assuming it's stored there
+        List<Cart> cartItems = (List<Cart>) session.getAttribute("cart");
+
+        if (cartItems == null || cartItems.isEmpty()) {
             throw new RuntimeException("No items in the cart to checkout");
         }
 
+        // Calculate the total price of the cart
         BigDecimal totalPrice = cartItems.stream()
                 .map(Cart::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-
+        // Create a new order
         Orders order = new Orders();
-
         order.setUser(user);
         order.setPaymentMethod(paymentMethod);
         order.setAddress(address);
@@ -80,14 +86,17 @@ public class OrdersServiceImpl implements OrdersService {
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
         order.setTotalPrice(totalPrice);
+
+        // Save the order to the database
         ordersRepository.save(order);
 
+        // Create order items from the cart and associate them with the order
         for (Cart cartItem : cartItems) {
             createOrderItemFromCart(cartItem, order);
         }
 
-        cartRepository.deleteAll(cartItems);
-
+        // Clear the cart in the session after successful checkout
+        session.removeAttribute("cart");
 
         return order;
     }
