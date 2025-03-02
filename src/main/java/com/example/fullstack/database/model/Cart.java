@@ -3,6 +3,7 @@ package com.example.fullstack.database.model;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -75,6 +76,13 @@ public class Cart {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+    public BigDecimal getPricePerItem() {
+        return menuItem.getPrice();
+    }
+
+    public BigDecimal getTotalPrice() {
+        return menuItem.getPrice().multiply(new BigDecimal(quantity));
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.example.fullstack.database.model.Status;
 import com.example.fullstack.database.service.OrdersService;
 import com.example.fullstack.database.service.implementation.EmailService;
 import com.example.fullstack.database.service.implementation.OrderItemServiceImpl;
+import com.example.fullstack.database.service.implementation.OrdersServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.parameters.P;
@@ -17,10 +18,10 @@ import java.util.List;
 @RequestMapping("/api/orders")
 public class OrdersController {
     private final OrderItemServiceImpl orderItemServiceImpl;
-    OrdersService ordersServiceImpl;
+    OrdersServiceImpl ordersServiceImpl;
     private final SimpMessagingTemplate messagingTemplate;
     private final EmailService emailService;
-    public OrdersController(OrdersService ordersServiceImpl, OrderItemServiceImpl orderItemServiceImpl, SimpMessagingTemplate messagingTemplate, EmailService emailService) {
+    public OrdersController(OrdersServiceImpl ordersServiceImpl, OrderItemServiceImpl orderItemServiceImpl, SimpMessagingTemplate messagingTemplate, EmailService emailService) {
         this.ordersServiceImpl = ordersServiceImpl;
         this.orderItemServiceImpl = orderItemServiceImpl;
         this.messagingTemplate = messagingTemplate;
@@ -79,9 +80,15 @@ public class OrdersController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<Orders> processCheckout(@RequestBody List<OrderItem> ordersItems, PaymentMethod paymentMethod,String address) {
-        Orders order =  ordersServiceImpl.processCheckout(ordersItems,paymentMethod,address);
-        return ResponseEntity.ok(order);
+    public ResponseEntity<?> checkout(@RequestParam PaymentMethod paymentMethod, @RequestParam String address) {
+        try {
+            // Call the service to process the checkout
+            ordersServiceImpl.processCheckout(paymentMethod,address);
+
+            return ResponseEntity.ok("Order placed successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error during checkout: " + e.getMessage());
+        }
     }
 
 

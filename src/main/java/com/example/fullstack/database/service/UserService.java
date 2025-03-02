@@ -10,5 +10,6 @@ public interface UserService {
     void createUser(User user);
     Optional<User> getUserById(Long id);
     List<User> addAllUsers(List<User> users);
+    User getCurrentUser();
 
 }

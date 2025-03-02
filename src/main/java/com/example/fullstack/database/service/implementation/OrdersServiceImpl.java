@@ -1,6 +1,8 @@
 package com.example.fullstack.database.service.implementation;
 
 import com.example.fullstack.database.model.*;
+import com.example.fullstack.database.repository.CartRepository;
+import com.example.fullstack.database.repository.MenuItemRepository;
 import com.example.fullstack.database.repository.OrderItemRepository;
 import com.example.fullstack.database.repository.OrdersRepository;
 import com.example.fullstack.database.service.OrdersService;
@@ -16,13 +18,17 @@ import java.util.List;
 public class OrdersServiceImpl implements OrdersService {
 
     private final OrderItemRepository orderItemRepository;
-    OrdersRepository ordersRepository;
+    private final CartRepository cartRepository;
+    private final MenuItemRepository menuItemRepository;
+     OrdersRepository ordersRepository;
 
 
 
-    public OrdersServiceImpl(OrdersRepository ordersRepository, OrderItemRepository orderItemRepository) {
+    public OrdersServiceImpl(OrdersRepository ordersRepository, OrderItemRepository orderItemRepository, CartRepository cartRepository, MenuItemRepository menuItemRepository) {
         this.ordersRepository = ordersRepository;
         this.orderItemRepository = orderItemRepository;
+        this.cartRepository = cartRepository;
+        this.menuItemRepository = menuItemRepository;
     }
 
 
@@ -51,28 +57,48 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    public Orders processCheckout(List<OrderItem> orderItems, PaymentMethod paymentMethod,String address) {
+    public Orders processCheckout(PaymentMethod paymentMethod,String address) {
         User user = getCurrentUser();
+
+        List<Cart> cartItems = cartRepository.findByUserId(user.getId());
+
+        if (cartItems.isEmpty()) {
+            throw new RuntimeException("No items in the cart to checkout");
+        }
+
+        BigDecimal totalPrice = cartItems.stream()
+                .map(Cart::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+
         Orders order = new Orders();
+
         order.setUser(user);
         order.setPaymentMethod(paymentMethod);
         order.setAddress(address);
         order.setStatus(Status.PENDING);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
-
-
-        BigDecimal totalPrice = calculateTotalPrice(orderItems);
         order.setTotalPrice(totalPrice);
-        Orders readyOrder = ordersRepository.save(order);
+        ordersRepository.save(order);
 
-        for(OrderItem orderItem : orderItems) {
-            orderItem.setOrder(readyOrder);
-            orderItemRepository.save(orderItem);
+        for (Cart cartItem : cartItems) {
+            createOrderItemFromCart(cartItem, order);
         }
 
+        cartRepository.deleteAll(cartItems);
 
-        return readyOrder;
+
+        return order;
+    }
+
+    private void createOrderItemFromCart(Cart cartItem, Orders order) {
+        OrderItem orderItem = new OrderItem();
+        orderItem.setMenuItem(cartItem.getMenuItem());
+        orderItem.setQuantity(cartItem.getQuantity());
+        orderItem.setPricePerItem(cartItem.getPricePerItem());
+        orderItem.setOrder(order);  // Associate with the order
+        orderItemRepository.save(orderItem);
     }
 
     @Override
