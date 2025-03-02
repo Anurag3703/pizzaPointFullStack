@@ -13,6 +13,7 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private Long quantity;
+    private BigDecimal totalPrice;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -30,6 +31,7 @@ public class Cart {
     public Cart() {
     }
 
+
     public Cart(int id, Long quantity, User user, MenuItem menuItem, LocalDateTime createdAt) {
         this.id = id;
         this.quantity = quantity;
@@ -40,6 +42,10 @@ public class Cart {
 
     public int getId() {
         return id;
+    }
+
+    public void setTotalPrice(BigDecimal totalPrice) {
+        this.totalPrice = totalPrice;
     }
 
     public void setId(int id) {
