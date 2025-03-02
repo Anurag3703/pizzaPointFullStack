@@ -62,7 +62,12 @@ public class Orders {
     }
 
     public BigDecimal getTotalPrice() {
-        return totalPrice;
+        // Calculate total price dynamically based on order items
+        BigDecimal total = BigDecimal.ZERO;
+        for (OrderItem item : orderItems) {
+            total = total.add(item.getTotalPrice());
+        }
+        return total;
     }
 
     public void setTotalPrice(BigDecimal totalPrice) {

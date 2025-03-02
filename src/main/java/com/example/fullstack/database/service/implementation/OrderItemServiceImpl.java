@@ -35,7 +35,6 @@ public class OrderItemServiceImpl implements OrderItemService {
                 .orElseThrow(() -> new RuntimeException("Order item not found"));
 
         orderItem.setQuantity(orderItem.getQuantity() + quantity);
-        orderItem.setTotalPrice(orderItem.getPricePerItem().multiply(BigDecimal.valueOf(orderItem.getQuantity())));
         ordersRepository.save(order);
         updateOrderTotalPrice(order);
 
@@ -50,7 +49,7 @@ public class OrderItemServiceImpl implements OrderItemService {
 
         if (orderItem.getQuantity() > quantity) {
             orderItem.setQuantity(orderItem.getQuantity() - quantity);
-            orderItem.setTotalPrice(orderItem.getPricePerItem().multiply(BigDecimal.valueOf(orderItem.getQuantity())));
+
         } else {
             // for 0 quantity..
             order.getOrderItems().remove(orderItem);

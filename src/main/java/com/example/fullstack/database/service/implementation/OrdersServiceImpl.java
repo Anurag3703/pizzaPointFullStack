@@ -1,9 +1,6 @@
 package com.example.fullstack.database.service.implementation;
 
-import com.example.fullstack.database.model.OrderItem;
-import com.example.fullstack.database.model.Orders;
-import com.example.fullstack.database.model.Status;
-import com.example.fullstack.database.model.User;
+import com.example.fullstack.database.model.*;
 import com.example.fullstack.database.repository.OrderItemRepository;
 import com.example.fullstack.database.repository.OrdersRepository;
 import com.example.fullstack.database.service.OrdersService;
@@ -54,10 +51,12 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    public Orders processCheckout(List<OrderItem> orderItems) {
+    public Orders processCheckout(List<OrderItem> orderItems, PaymentMethod paymentMethod,String address) {
         User user = getCurrentUser();
         Orders order = new Orders();
         order.setUser(user);
+        order.setPaymentMethod(paymentMethod);
+        order.setAddress(address);
         order.setStatus(Status.PENDING);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
@@ -69,8 +68,6 @@ public class OrdersServiceImpl implements OrdersService {
 
         for(OrderItem orderItem : orderItems) {
             orderItem.setOrder(readyOrder);
-            orderItem.setTotalPrice(orderItem.getTotalPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())));
-            orderItem.setQuantity(orderItem.getQuantity()); //maybe we can remove it.
             orderItemRepository.save(orderItem);
         }
 

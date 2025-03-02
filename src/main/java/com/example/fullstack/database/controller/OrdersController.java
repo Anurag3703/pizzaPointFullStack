@@ -1,12 +1,14 @@
 package com.example.fullstack.database.controller;
 import com.example.fullstack.database.model.OrderItem;
 import com.example.fullstack.database.model.Orders;
+import com.example.fullstack.database.model.PaymentMethod;
 import com.example.fullstack.database.model.Status;
 import com.example.fullstack.database.service.OrdersService;
 import com.example.fullstack.database.service.implementation.EmailService;
 import com.example.fullstack.database.service.implementation.OrderItemServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import java.io.File;
 import java.util.List;
@@ -77,8 +79,8 @@ public class OrdersController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<Orders> processCheckout(@RequestBody List<OrderItem> ordersItems) {
-        Orders order =  ordersServiceImpl.processCheckout(ordersItems);
+    public ResponseEntity<Orders> processCheckout(@RequestBody List<OrderItem> ordersItems, PaymentMethod paymentMethod,String address) {
+        Orders order =  ordersServiceImpl.processCheckout(ordersItems,paymentMethod,address);
         return ResponseEntity.ok(order);
     }
 

@@ -2,9 +2,11 @@ package com.example.fullstack.database.model;
 
 public enum MenuItemCategory {
     PIZZA,
-    SIDE_DISH,
-    DESSERT,
-    BEVERAGE,
-    APPETIZER,
-    SAUCE
+    DRINKS,
+    WRAP,
+    CALZONE,
+    BURGER,
+    DESERT,
+    SAUCE,
+    SIDE_DISH
 }
