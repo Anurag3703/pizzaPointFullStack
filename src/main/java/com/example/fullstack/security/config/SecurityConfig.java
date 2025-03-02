@@ -39,10 +39,10 @@ public class SecurityConfig {
                 //    .httpBasic(Customizer.withDefaults())
                 .cors(cors->    cors.configurationSource(corsConfigurationSource()))
                 .addFilterBefore(jwtValidationFilter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/menuItem/").hasRole("USER")
-                        .anyRequest().permitAll())
-
+                //.authorizeHttpRequests(auth -> auth
+                      //  .requestMatchers("/api/menuItem/").hasRole("USER")
+                      //  .anyRequest().permitAll())
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .csrf(AbstractHttpConfigurer::disable)
                 .build();
     }

@@ -1,6 +1,7 @@
 package com.example.fullstack.database.service;
 
 import com.example.fullstack.database.model.*;
+import jakarta.servlet.http.HttpSession;
 import org.aspectj.weaver.ast.Or;
 
 import java.util.List;
@@ -11,7 +12,7 @@ public interface OrdersService {
     List<Orders> addAllOrders(List<Orders> orders);
     void updateOrder(Orders order);
     void updateOrderStatus(Long orderId, Status status);
-    Orders  processCheckout( PaymentMethod paymentMethod, String address);
+    Orders  processCheckout(PaymentMethod paymentMethod, String address, HttpSession session);
     Orders  getOrderById(Long orderId);
 
 
