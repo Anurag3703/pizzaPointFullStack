@@ -27,7 +27,7 @@ public class OrderItem {
     public OrderItem(Long id, Long quantity, BigDecimal pricePerItem, Orders order, MenuItem menuItem) {
         this.id = id;
         this.quantity = quantity;
-        this.pricePerItem = pricePerItem;
+        this.pricePerItem = menuItem.getPrice();
         this.order = order;
         this.menuItem = menuItem;
     }
@@ -49,7 +49,7 @@ public class OrderItem {
     }
 
     public BigDecimal getPricePerItem() {
-        return pricePerItem;
+        return menuItem.getPrice();
     }
 
     public void setPricePerItem(BigDecimal pricePerItem) {
