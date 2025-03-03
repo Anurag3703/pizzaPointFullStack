@@ -1,16 +1,17 @@
 package com.example.fullstack.database.service.implementation;
 
 import com.example.fullstack.database.model.*;
-import com.example.fullstack.database.repository.CartRepository;
-import com.example.fullstack.database.repository.MenuItemRepository;
-import com.example.fullstack.database.repository.OrderItemRepository;
-import com.example.fullstack.database.repository.OrdersRepository;
+import com.example.fullstack.database.repository.*;
 import com.example.fullstack.database.service.OrdersService;
+import com.example.fullstack.security.model.UserSecurity;
+import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,14 +22,19 @@ public class OrdersServiceImpl implements OrdersService {
     private final CartRepository cartRepository;
     private final MenuItemRepository menuItemRepository;
      OrdersRepository ordersRepository;
+     private final UserRepository userRepository;
 
 
 
-    public OrdersServiceImpl(OrdersRepository ordersRepository, OrderItemRepository orderItemRepository, CartRepository cartRepository, MenuItemRepository menuItemRepository) {
+    public OrdersServiceImpl(OrdersRepository ordersRepository, OrderItemRepository orderItemRepository
+            , CartRepository cartRepository
+            , MenuItemRepository menuItemRepository
+            , UserRepository userRepository) {
         this.ordersRepository = ordersRepository;
         this.orderItemRepository = orderItemRepository;
         this.cartRepository = cartRepository;
         this.menuItemRepository = menuItemRepository;
+        this.userRepository = userRepository;
     }
 
 
@@ -57,22 +63,32 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    public Orders processCheckout(PaymentMethod paymentMethod,String address) {
-        User user = getCurrentUser();
+    @Transactional
+    public Orders processCheckout(PaymentMethod paymentMethod, String address) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        List<Cart> cartItems = cartRepository.findByUserId(user.getId());
+        // Check if principal is a UserSecurity object
+        if (!(principal instanceof UserSecurity)) {
+            throw new RuntimeException("No user is logged in or invalid user type");
+        }
 
-        if (cartItems.isEmpty()) {
+        // Convert UserSecurity to User
+        UserSecurity userSecurity = (UserSecurity) principal;
+        User user = getUserFromUserSecurity(userSecurity);
+
+        List<Cart> cartItems = cartRepository.findByUser(user);
+
+        if (cartItems == null || cartItems.isEmpty()) {
             throw new RuntimeException("No items in the cart to checkout");
         }
 
+        // Calculate the total price of the cart
         BigDecimal totalPrice = cartItems.stream()
                 .map(Cart::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-
+        // Create a new order
         Orders order = new Orders();
-
         order.setUser(user);
         order.setPaymentMethod(paymentMethod);
         order.setAddress(address);
@@ -80,14 +96,18 @@ public class OrdersServiceImpl implements OrdersService {
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
         order.setTotalPrice(totalPrice);
+        order.setDate(LocalDate.now());
+
+        // Save the order to the database
         ordersRepository.save(order);
 
+        // Create order items from the cart and associate them with the order
         for (Cart cartItem : cartItems) {
             createOrderItemFromCart(cartItem, order);
         }
 
-        cartRepository.deleteAll(cartItems);
-
+        // Clear the cart items for the user after successful checkout
+        cartRepository.deleteByUser(user);
 
         return order;
     }
@@ -118,6 +138,16 @@ public class OrdersServiceImpl implements OrdersService {
         return orderItems.stream()
                 .map(item -> item.getPricePerItem().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private User getUserFromUserSecurity(UserSecurity userSecurity) {
+        // Assuming UserSecurity has a method to get the user ID or username
+        return userRepository.findByEmail(userSecurity.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Alternative if using username instead of ID
+        // return userRepository.findByUsername(userSecurity.getUsername())
+        //        .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
 

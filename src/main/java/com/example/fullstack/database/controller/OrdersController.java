@@ -8,6 +8,7 @@ import com.example.fullstack.database.service.implementation.EmailService;
 import com.example.fullstack.database.service.implementation.OrderItemServiceImpl;
 import com.example.fullstack.database.service.implementation.OrdersServiceImpl;
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.parameters.P;
@@ -64,27 +65,14 @@ public class OrdersController {
         }
     }
 
-    @PatchMapping("/{orderId}/items/{menuItemId}/increase/{quantity}")
-    public String increaseItemQuantity(@PathVariable Long orderId,
-                                       @PathVariable Long menuItemId,
-                                       @PathVariable Integer quantity) {
-        orderItemServiceImpl.increaseItemQuantity(orderId, menuItemId, quantity);
-        return "Item quantity increased";
-    }
 
-    @PatchMapping("/{orderId}/items/{menuItemId}/decrease/{quantity}")
-    public String decreaseItemQuantity(@PathVariable Long orderId,
-                                       @PathVariable Long menuItemId,
-                                       @PathVariable Integer quantity) {
-        orderItemServiceImpl.decreaseItemQuantity(orderId, menuItemId, quantity);
-        return "Item quantity decreased";
-    }
 
     @PostMapping("/checkout")
-    public ResponseEntity<?> checkout(@RequestParam PaymentMethod paymentMethod, @RequestParam String address, HttpSession session) {
+
+    public ResponseEntity<String> checkout(@RequestParam PaymentMethod paymentMethod, @RequestParam String address) {
         try {
             // Call the service to process the checkout
-            ordersServiceImpl.processCheckout(paymentMethod,address,session);
+            ordersServiceImpl.processCheckout(paymentMethod,address);
 
             return ResponseEntity.ok("Order placed successfully!");
         } catch (Exception e) {

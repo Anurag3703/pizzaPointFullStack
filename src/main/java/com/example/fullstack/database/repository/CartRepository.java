@@ -6,7 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface CartRepository extends JpaRepository<Cart, Integer> {
+public interface CartRepository extends JpaRepository<Cart, Long> {
 
     List<Cart> findByUser(User currentUser);
+
+    void deleteByUser(User user);
+
+    List<Cart> findAllByUser(User currentUser);
 }

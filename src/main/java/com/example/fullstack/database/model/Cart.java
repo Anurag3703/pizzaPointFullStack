@@ -1,6 +1,7 @@
 package com.example.fullstack.database.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -16,6 +17,7 @@ public class Cart {
     private BigDecimal totalPrice;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "menu_item_id", nullable = false)
+    @JsonIgnoreProperties({"orderItems", "cartEntries"})
     private MenuItem menuItem;
 
     public User getUser() {
@@ -28,6 +30,7 @@ public class Cart {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({"carts", "orders", "password", "role"})
     private User user;
     private LocalDateTime createdAt;
 

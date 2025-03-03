@@ -17,6 +17,7 @@ public interface MenuItemService {
     void addAllMenuItems(List<MenuItem> menuItems);
     List<MenuItem> getMenuItemsByCategory(MenuItemCategory category);
     void deleteAllMenuItems();
+    List<MenuItem> getMenuItemByNameAndSize(String name, Size size);
 
 
 

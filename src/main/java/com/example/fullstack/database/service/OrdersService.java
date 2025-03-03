@@ -12,7 +12,7 @@ public interface OrdersService {
     List<Orders> addAllOrders(List<Orders> orders);
     void updateOrder(Orders order);
     void updateOrderStatus(Long orderId, Status status);
-    Orders  processCheckout(PaymentMethod paymentMethod, String address, HttpSession session);
+    Orders  processCheckout(PaymentMethod paymentMethod, String address);
     Orders  getOrderById(Long orderId);
 
 

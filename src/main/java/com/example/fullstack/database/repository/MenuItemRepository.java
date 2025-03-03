@@ -20,6 +20,8 @@ public interface MenuItemRepository extends JpaRepository<MenuItem, String> {
     void deleteAll();
     List<MenuItem> findByIsAvailable(Boolean isAvailable);
     List<MenuItem> findByCategory(MenuItemCategory category);
+    List<MenuItem> findByCategoryAndIsAvailable(MenuItemCategory category, Boolean isAvailable);
+    List<MenuItem> findByNameAndSize(String name, Size size);
 
 
 }

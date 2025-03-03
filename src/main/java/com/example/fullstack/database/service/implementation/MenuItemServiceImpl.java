@@ -68,4 +68,9 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItemRepository.deleteAll();
     }
 
+    @Override
+    public List<MenuItem> getMenuItemByNameAndSize(String name, Size size) {
+        return menuItemRepository.findByNameAndSize(name, size);
+    }
+
 }
