@@ -1,9 +1,11 @@
     package com.example.fullstack.database.service.implementation;
 
     import com.example.fullstack.database.model.Cart;
+    import com.example.fullstack.database.model.Extra;
     import com.example.fullstack.database.model.MenuItem;
     import com.example.fullstack.database.model.User;
     import com.example.fullstack.database.repository.CartRepository;
+    import com.example.fullstack.database.repository.ExtraRepository;
     import com.example.fullstack.database.repository.MenuItemRepository;
     import com.example.fullstack.database.service.CartService;
     import com.example.fullstack.database.service.UserService;
@@ -20,21 +22,24 @@
     @Service
     public class CartServiceImpl implements CartService {
 
+        private final ExtraRepository extraRepository;
         CartRepository cartRepository;
         MenuItemRepository menuItemRepository;
         UserService userService;
-        public CartServiceImpl(CartRepository cartRepository, MenuItemRepository menuItemRepository, UserService userService) {
+        public CartServiceImpl(CartRepository cartRepository, MenuItemRepository menuItemRepository, UserService userService, ExtraRepository extraRepository) {
             this.cartRepository = cartRepository;
             this.menuItemRepository = menuItemRepository;
             this.userService = userService;
+            this.extraRepository = extraRepository;
         }
 
         @Override
-        public void addItemToCart(HttpSession session, String menuItemId, Long quantity) {
+        public void addItemToCart(HttpSession session, String menuItemId, Long quantity,List<String> extraItemId) {
 
             MenuItem menuItem = menuItemRepository.findById(menuItemId)
                     .orElseThrow(() -> new RuntimeException("Menu Item Not Found"));
             User currentUser = userService.getCurrentUser();
+            List<Extra> extras = extraRepository.findAllById(extraItemId);
 
             Cart cartItem = new Cart();
             cartItem.setMenuItem(menuItem);
@@ -42,6 +47,14 @@
             cartItem.setTotalPrice(menuItem.getPrice().multiply(BigDecimal.valueOf(quantity)));
             cartItem.setCreatedAt(LocalDateTime.now());
             cartItem.setUser(currentUser);
+            cartItem.setExtras(extras);
+            BigDecimal totalPrice = menuItem.getPrice().multiply(BigDecimal.valueOf(quantity))
+                    .add(extras.stream()
+                            .map(Extra::getPrice)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add)
+                            .multiply(BigDecimal.valueOf(quantity)));
+
+            cartItem.setTotalPrice(totalPrice);
             cartRepository.save(cartItem);
         }
 
