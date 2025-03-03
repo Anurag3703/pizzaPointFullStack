@@ -81,5 +81,12 @@
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 }
 
+        @Override
+        public List<Cart> getAllCartItems() {
+            User currentUser = userService.getCurrentUser();
+            return cartRepository.findByUser(currentUser);
+        }
+
+
 
     }

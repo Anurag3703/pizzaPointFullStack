@@ -55,4 +55,9 @@
             menuItemServiceImpl.deleteAllMenuItems();
             return "Deleted all menu items";
         }
+
+        @GetMapping("/get/name/size")
+        public List<MenuItem> getMenuItemsByName(@RequestParam String name, @RequestParam Size size) {
+            return menuItemServiceImpl.getMenuItemByNameAndSize(name, size);
+        }
     }

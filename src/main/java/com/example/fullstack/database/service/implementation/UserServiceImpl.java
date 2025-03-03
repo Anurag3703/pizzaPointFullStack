@@ -49,7 +49,13 @@ public class UserServiceImpl implements UserService {
             return userRepository.findByEmail(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
         }
-        throw new RuntimeException("User not authenticated");
+
+//        if (principal instanceof UserSecurity) {
+//            UserSecurity userSecurity = (UserSecurity) principal;
+//            return userRepository.findById(userSecurity.getId())
+//                    .orElseThrow(() -> new RuntimeException("User not found"));
+//        }
+       throw new RuntimeException("User not authenticated");
     }
     }
 

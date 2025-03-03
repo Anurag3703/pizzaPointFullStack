@@ -1,27 +1,32 @@
 package com.example.fullstack.database.controller;
 
 import com.example.fullstack.database.model.Cart;
+import com.example.fullstack.database.model.MenuItem;
 import com.example.fullstack.database.model.User;
 import com.example.fullstack.database.service.implementation.CartServiceImpl;
 import com.example.fullstack.database.service.implementation.UserServiceImpl;
+import com.example.fullstack.security.repository.SecurityUserRepository;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/cart")
 public class CartController {
 
+    private final SecurityUserRepository securityUserRepository;
     CartServiceImpl cartServiceImpl;
     UserServiceImpl userServiceImpl;
 
-    public CartController(CartServiceImpl cartServiceImpl, UserServiceImpl userServiceImpl) {
+    public CartController(CartServiceImpl cartServiceImpl, UserServiceImpl userServiceImpl, SecurityUserRepository securityUserRepository) {
         this.cartServiceImpl = cartServiceImpl;
         this.userServiceImpl = userServiceImpl;
+        this.securityUserRepository = securityUserRepository;
     }
 
     @PostMapping("/add-to-cart")
@@ -54,6 +59,12 @@ public class CartController {
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @GetMapping("/get/allCartItems")
+    public List<Cart> getAllCartItems() {
+        return cartServiceImpl.getAllCartItems();
+
     }
 }
 

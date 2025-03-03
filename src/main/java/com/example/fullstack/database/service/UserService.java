@@ -12,4 +12,5 @@ public interface UserService {
     List<User> addAllUsers(List<User> users);
     User getCurrentUser();
 
+
 }
