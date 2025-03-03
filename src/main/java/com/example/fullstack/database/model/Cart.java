@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -19,14 +20,15 @@ public class Cart {
     @JoinColumn(name = "menu_item_id", nullable = false)
     @JsonIgnoreProperties({"orderItems", "cartEntries"})
     private MenuItem menuItem;
+    @ManyToMany
+    @JoinTable(
+            name = "cart_extras",
+            joinColumns = @JoinColumn(name = "cart_id"),
+            inverseJoinColumns = @JoinColumn(name = "extra_id")
+    )
+    private List<Extra> extras;
 
-    public User getUser() {
-        return user;
-    }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -54,6 +56,14 @@ public class Cart {
 
     public int getId() {
         return id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public void setTotalPrice(BigDecimal totalPrice) {
@@ -96,7 +106,21 @@ public class Cart {
     }
 
     public BigDecimal getTotalPrice() {
-        return menuItem.getPrice().multiply(new BigDecimal(quantity));
+
+        BigDecimal basePrice = menuItem.getPrice().multiply(new BigDecimal(quantity));
+        BigDecimal extrasPrice = extras.stream()
+                .map(Extra::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .multiply(new BigDecimal(quantity));
+        return basePrice.add(extrasPrice);
+    }
+
+    public List<Extra> getExtras() {
+        return extras;
+    }
+
+    public void setExtras(List<Extra> extras) {
+        this.extras = extras;
     }
 
     @Override
@@ -106,6 +130,7 @@ public class Cart {
                 ", quantity=" + quantity +
                 ", totalPrice=" + totalPrice +
                 ", menuItem=" + menuItem +
+                ", extras=" + extras +
                 ", user=" + user +
                 ", createdAt=" + createdAt +
                 '}';
