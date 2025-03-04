@@ -20,6 +20,8 @@ public class MenuItem {
     private Size size;
     private Boolean isAvailable;
     private String imageUrl;
+    @OneToMany(mappedBy = "menuItem")
+    private List<CartItem> cartEntries;
 
     public String getImageUrl() {
         return imageUrl;
@@ -37,19 +39,11 @@ public class MenuItem {
         this.orderItems = orderItems;
     }
 
-    public List<Cart> getCartEntries() {
-        return cartEntries;
-    }
-
-    public void setCartEntries(List<Cart> cartEntries) {
-        this.cartEntries = cartEntries;
-    }
 
     @OneToMany(mappedBy = "menuItem")
     private List<OrderItem> orderItems;
 
-    @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL)
-    private List<Cart> cartEntries;
+
 
     public MenuItem() {
     }
@@ -121,19 +115,6 @@ public class MenuItem {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        MenuItem menuItem = (MenuItem) o;
-        return Objects.equals(id, menuItem.id) && Objects.equals(name, menuItem.name) && Objects.equals(description, menuItem.description) && Objects.equals(price, menuItem.price) && category == menuItem.category && size == menuItem.size && Objects.equals(isAvailable, menuItem.isAvailable);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, name, description, price, category, size, isAvailable);
-    }
-
-    @Override
     public String toString() {
         return "MenuItem{" +
                 "id='" + id + '\'' +
@@ -143,7 +124,18 @@ public class MenuItem {
                 ", category=" + category +
                 ", size=" + size +
                 ", isAvailable=" + isAvailable +
+                ", imageUrl='" + imageUrl + '\'' +
+                ", cartEntries=" + cartEntries +
+                ", orderItems=" + orderItems +
                 '}';
+    }
+
+    public List<CartItem> getCartEntries() {
+        return cartEntries;
+    }
+
+    public void setCartEntries(List<CartItem> cartEntries) {
+        this.cartEntries = cartEntries;
     }
 }
 

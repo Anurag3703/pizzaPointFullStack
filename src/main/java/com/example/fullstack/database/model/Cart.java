@@ -1,44 +1,37 @@
 package com.example.fullstack.database.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Entity
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    private Long quantity;
-    private BigDecimal totalPrice;
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "menu_item_id", nullable = false)
-    @JsonIgnoreProperties({"orderItems", "cartEntries"})
-    private MenuItem menuItem;
-    @ManyToMany
-    @JoinTable(
-            name = "cart_extras",
-            joinColumns = @JoinColumn(name = "cart_id"),
-            inverseJoinColumns = @JoinColumn(name = "extra_id")
-    )
-    private List<Extra> extras;
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
 
-
-
+    private List<CartItem> cartItems = new ArrayList<>();
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnoreProperties({"carts", "orders", "password", "role"})
     private User user;
     private LocalDateTime createdAt;
+    private BigDecimal totalPrice;
 
 
     @PrePersist
     protected void onCreate() {
+
         this.createdAt = LocalDateTime.now();
     }
 
@@ -46,12 +39,12 @@ public class Cart {
     }
 
 
-    public Cart(int id, Long quantity,  MenuItem menuItem,User user, LocalDateTime createdAt) {
+    public Cart(int id,  List<CartItem> cartItems, User user, LocalDateTime createdAt, BigDecimal totalPrice) {
         this.id = id;
-        this.quantity = quantity;
+        this.cartItems = cartItems;
         this.user = user;
-        this.menuItem = menuItem;
         this.createdAt = createdAt;
+        this.totalPrice = totalPrice;
     }
 
     public int getId() {
@@ -66,33 +59,13 @@ public class Cart {
         this.user = user;
     }
 
-    public void setTotalPrice(BigDecimal totalPrice) {
-        this.totalPrice = totalPrice;
-    }
+
 
     public void setId(int id) {
         this.id = id;
     }
 
-    public Long getQuantity() {
-        return quantity;
-    }
 
-    public void setQuantity(Long quantity) {
-        this.quantity = quantity;
-    }
-
-
-
-
-
-    public MenuItem getMenuItem() {
-        return menuItem;
-    }
-
-    public void setMenuItem(MenuItem menuItem) {
-        this.menuItem = menuItem;
-    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
@@ -101,38 +74,37 @@ public class Cart {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-    public BigDecimal getPricePerItem() {
-        return menuItem.getPrice();
-    }
+//    public BigDecimal getPricePerItem() {
+//        return menuItem.getPrice();
+//    }
+
 
     public BigDecimal getTotalPrice() {
-
-        BigDecimal basePrice = menuItem.getPrice().multiply(new BigDecimal(quantity));
-        BigDecimal extrasPrice = extras.stream()
-                .map(Extra::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .multiply(new BigDecimal(quantity));
-        return basePrice.add(extrasPrice);
+         return cartItems.stream()
+                .map(CartItem::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public List<Extra> getExtras() {
-        return extras;
+    public void setTotalPrice(BigDecimal totalPrice) {
+        this.totalPrice = totalPrice;
     }
 
-    public void setExtras(List<Extra> extras) {
-        this.extras = extras;
+    public List<CartItem> getCartItems() {
+        return cartItems;
+    }
+
+    public void setCartItems(List<CartItem> cartItems) {
+        this.cartItems = cartItems;
     }
 
     @Override
     public String toString() {
         return "Cart{" +
                 "id=" + id +
-                ", quantity=" + quantity +
-                ", totalPrice=" + totalPrice +
-                ", menuItem=" + menuItem +
-                ", extras=" + extras +
+                ", cartItems=" + cartItems +
                 ", user=" + user +
                 ", createdAt=" + createdAt +
+                ", totalPrice=" + getTotalPrice() +
                 '}';
     }
 }

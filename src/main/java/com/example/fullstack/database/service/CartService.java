@@ -1,7 +1,6 @@
 package com.example.fullstack.database.service;
 
 import com.example.fullstack.database.model.Cart;
-import com.example.fullstack.database.model.User;
 import jakarta.servlet.http.HttpSession;
 
 import java.math.BigDecimal;
@@ -15,4 +14,5 @@ public interface CartService {
 
     BigDecimal getCartTotalPrice(HttpSession session);
     List<Cart> getAllCartItems();
+    List<Cart> getCartByUserEmail(String email);
 }

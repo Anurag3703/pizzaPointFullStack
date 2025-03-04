@@ -1,8 +1,6 @@
 package com.example.fullstack.database.controller;
 
 import com.example.fullstack.database.model.Cart;
-import com.example.fullstack.database.model.MenuItem;
-import com.example.fullstack.database.model.User;
 import com.example.fullstack.database.service.implementation.CartServiceImpl;
 import com.example.fullstack.database.service.implementation.UserServiceImpl;
 import com.example.fullstack.security.repository.SecurityUserRepository;
@@ -39,11 +37,11 @@ public class CartController {
         }
     }
 
-    @PutMapping("/update/{cartId}")
-    public ResponseEntity<String> updateItemQuantity(@PathVariable Long cartId, @RequestParam Long quantity) {
-        System.out.println("Updating cart item with ID: " + cartId + ", new quantity: " + quantity);
+    @PutMapping("/update/{carItemId}")
+    public ResponseEntity<String> updateItemQuantity(@PathVariable Long cartItemId, @RequestParam Long quantity) {
+        System.out.println("Updating cart item with ID: " + cartItemId + ", new quantity: " + quantity);
         try {
-            cartServiceImpl.updateItemQuantity(cartId, quantity);
+            cartServiceImpl.updateItemQuantity(cartItemId, quantity);
             return new ResponseEntity<>("Cart item updated successfully", HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -65,6 +63,12 @@ public class CartController {
     public List<Cart> getAllCartItems() {
         return cartServiceImpl.getAllCartItems();
 
+    }
+
+    @GetMapping("/user-email")
+    public ResponseEntity<List<Cart>> getCartByUserEmail(@RequestParam String email) {
+        List<Cart> carts = cartServiceImpl.getCartByUserEmail(email);
+        return ResponseEntity.ok(carts);
     }
 }
 
