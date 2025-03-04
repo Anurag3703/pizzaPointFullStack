@@ -60,7 +60,7 @@ public class CartServiceImpl implements CartService {
             cartItem.setQuantity(quantity);
             cartItem.setExtras(extras);
         } else {
-            cartItem.setQuantity(cartItem.getQuantity() + quantity);
+            cartItem.setQuantity(cartItem.getQuantity() + quantity); // If cartItem is same just quantity is increased
         }
 
         // Cart Item Total Price
@@ -80,36 +80,53 @@ public class CartServiceImpl implements CartService {
                 .map(CartItem::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        //Total Price in cart
-        cart.setTotalPrice(cartTotal);
-        //Save the cart
-        cartRepository.save(cart);
+
+        cart.setTotalPrice(cartTotal);  //Final price in cart
+        cartRepository.save(cart); // Save Cart
     }
 
     @Override
+    @Transactional
     public void updateItemQuantity(Long cartItemId, Long quantity) {
         Logger logger = LoggerFactory.getLogger(getClass());
-        CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+        try {
+            // Fetch the cart item only once
+            CartItem cartItem = cartItemRepository.findById(cartItemId)
+                    .orElseThrow(() -> new RuntimeException("Cart item not found"));
 
-        if (quantity <= 0) {
-            cartItemRepository.delete(cartItem);
-            logger.debug("Cart item with ID {} removed from the database", cartItemId);
-            return;
+            Cart cart = cartItem.getCart();
+
+            //Case 1 : When Quantity is zero
+            if (quantity <= 0) {
+
+                cart.getCartItems().remove(cartItem);  // Removed from the List of cart item in the Cart
+                cartItemRepository.delete(cartItem);   //Removed from CartItem table
+
+                BigDecimal cartTotal = cart.getCartItems().stream() //Total price in the cart after removing the cartItem
+                        .map(CartItem::getTotalPrice)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                cart.setTotalPrice(cartTotal);
+                cartRepository.save(cart);  // saved cart
+
+                logger.debug("Cart item with ID {} removed from the database", cartItemId);
+                return;
+            }
+
+            //Case 2 : Addition or Substraction of cartItem in cart
+            cartItem.setQuantity(quantity);
+            cartItem.setTotalPrice(cartItem.getMenuItem().getPrice().multiply(BigDecimal.valueOf(quantity)));
+            cartItemRepository.save(cartItem);
+
+            BigDecimal cartTotal = cart.getCartItems().stream() // Total price in Case 2
+                    .map(CartItem::getTotalPrice)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            cart.setTotalPrice(cartTotal);
+            cartRepository.save(cart);  //save cart
+
+        } catch (RuntimeException e) {
+            logger.error("Error updating cart item: {}", e.getMessage());
+            throw e;
         }
-
-        //If the item is increased or decreased
-        cartItem.setQuantity(quantity);
-        cartItem.setTotalPrice(cartItem.getMenuItem().getPrice().multiply(BigDecimal.valueOf(quantity)));
-        cartItemRepository.save(cartItem);
-
-        // Update the cart total
-        Cart cart = cartItem.getCart();
-        BigDecimal cartTotal = cart.getCartItems().stream()
-                .map(CartItem::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        cart.setTotalPrice(cartTotal);
-        cartRepository.save(cart);
 
     }
 
