@@ -5,6 +5,7 @@ import com.example.fullstack.database.service.implementation.CartServiceImpl;
 import com.example.fullstack.database.service.implementation.UserServiceImpl;
 import com.example.fullstack.security.repository.SecurityUserRepository;
 import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/cart")
 public class CartController {
@@ -37,9 +39,8 @@ public class CartController {
         }
     }
 
-    @PutMapping("/update/{carItemId}")
+    @PutMapping("/update/{cartItemId}")
     public ResponseEntity<String> updateItemQuantity(@PathVariable Long cartItemId, @RequestParam Long quantity) {
-        System.out.println("Updating cart item with ID: " + cartItemId + ", new quantity: " + quantity);
         try {
             cartServiceImpl.updateItemQuantity(cartItemId, quantity);
             return new ResponseEntity<>("Cart item updated successfully", HttpStatus.OK);
