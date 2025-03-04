@@ -11,6 +11,8 @@
     import com.example.fullstack.database.service.UserService;
 
     import jakarta.servlet.http.HttpSession;
+    import org.slf4j.Logger;
+    import org.slf4j.LoggerFactory;
     import org.springframework.stereotype.Service;
 
     import java.math.BigDecimal;
@@ -60,11 +62,14 @@
 
         @Override
         public void updateItemQuantity(Long cartId, Long quantity) {
+            Logger logger = LoggerFactory.getLogger(getClass());
             Cart cartItem = cartRepository.findById(cartId)
                     .orElseThrow(() -> new RuntimeException("Cart item not found"));
 
             if (quantity <= 0) {
-                throw new RuntimeException("Quantity must be greater than zero");
+                cartRepository.deleteById(cartId);
+                logger.debug("Cart item with ID {} removed from the database", cartId); // Debug log
+                return;
             }
             cartItem.setQuantity(quantity);
             cartItem.setTotalPrice(cartItem.getMenuItem().getPrice().multiply(BigDecimal.valueOf(quantity))); // Use menuItem price
