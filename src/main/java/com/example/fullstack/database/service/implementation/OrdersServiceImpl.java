@@ -76,15 +76,18 @@ public class OrdersServiceImpl implements OrdersService {
         UserSecurity userSecurity = (UserSecurity) principal;
         User user = getUserFromUserSecurity(userSecurity);
 
-        List<Cart> cartItems = cartRepository.findByUser(user);
+        // Retrieve the user's cart (each user has only one cart)
+        Cart cart = cartRepository.findByUser(user).stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No cart found for the user"));
 
-        if (cartItems == null || cartItems.isEmpty()) {
+        if (cart.getCartItems().isEmpty()) {
             throw new RuntimeException("No items in the cart to checkout");
         }
 
         // Calculate the total price of the cart
-        BigDecimal totalPrice = cartItems.stream()
-                .map(Cart::getTotalPrice)
+        BigDecimal totalPrice = cart.getCartItems().stream()
+                .map(CartItem::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Create a new order
@@ -101,22 +104,22 @@ public class OrdersServiceImpl implements OrdersService {
         // Save the order to the database
         ordersRepository.save(order);
 
-        // Create order items from the cart and associate them with the order
-        for (Cart cartItem : cartItems) {
+        // Create order items future use
+        for (CartItem cartItem : cart.getCartItems()) {
             createOrderItemFromCart(cartItem, order);
         }
 
-        // Clear the cart items for the user after successful checkout
+        // Clear the cart items
         cartRepository.deleteByUser(user);
 
         return order;
     }
 
-    private void createOrderItemFromCart(Cart cartItem, Orders order) {
+    private void createOrderItemFromCart(CartItem cartItem, Orders order) {
         OrderItem orderItem = new OrderItem();
         orderItem.setMenuItem(cartItem.getMenuItem());
         orderItem.setQuantity(cartItem.getQuantity());
-        orderItem.setPricePerItem(cartItem.getPricePerItem());
+        orderItem.setPricePerItem(cartItem.getMenuItem().getPrice());
         orderItem.setOrder(order);  // Associate with the order
         orderItemRepository.save(orderItem);
     }
