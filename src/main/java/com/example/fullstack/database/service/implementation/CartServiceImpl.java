@@ -112,7 +112,7 @@ public class CartServiceImpl implements CartService {
                 return;
             }
 
-            //Case 2 : Addition or Substraction of cartItem in cart
+            //Case 2 : Addition or Subtraction of cartItem in cart
             cartItem.setQuantity(quantity);
             cartItem.setTotalPrice(cartItem.getMenuItem().getPrice().multiply(BigDecimal.valueOf(quantity)));
             cartItemRepository.save(cartItem);
