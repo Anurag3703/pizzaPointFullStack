@@ -3,6 +3,7 @@ package com.example.fullstack.database.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -10,6 +11,7 @@ import java.util.Objects;
 @Entity
 public class Extra {
     @Id
+    @NotNull
     private String id;
     private String name;
     private BigDecimal price;
