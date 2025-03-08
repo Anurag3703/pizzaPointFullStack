@@ -3,12 +3,14 @@ package com.example.fullstack.security.controller;
 
 import com.example.fullstack.database.model.User;
 import com.example.fullstack.database.repository.UserRepository;
+import com.example.fullstack.database.service.implementation.CartServiceImpl;
 import com.example.fullstack.security.model.AuthRequest;
 import com.example.fullstack.security.model.AuthResponse;
 import com.example.fullstack.security.model.SignupRequest;
 import com.example.fullstack.security.model.UserSecurity;
 import com.example.fullstack.security.repository.SecurityUserRepository;
 import com.example.fullstack.security.util.JwtTokenUtil;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,24 +33,28 @@ public class EntryController {
     private final SecurityUserRepository securityUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final CartServiceImpl cartServiceImpl;
 
 
-    public EntryController(AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil, SecurityUserRepository securityUserRepository, PasswordEncoder passwordEncoder, UserRepository userRepository) {
+    public EntryController(AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil, SecurityUserRepository securityUserRepository, PasswordEncoder passwordEncoder, UserRepository userRepository, CartServiceImpl cartServiceImpl) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenUtil = jwtTokenUtil;
         this.securityUserRepository = securityUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.userRepository= userRepository;
+        this.cartServiceImpl = cartServiceImpl;
 
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<Object> login(@RequestBody AuthRequest authRequest, HttpSession session) {
        try {
            Authentication authentication = new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword());
            Authentication authenticated = authenticationManager.authenticate(authentication);
-           UserSecurity user = (UserSecurity) authenticated.getPrincipal();
-           String token = jwtTokenUtil.generateToken(user);
+           UserSecurity userSecurity = (UserSecurity) authenticated.getPrincipal();
+           User user = userSecurity.getUser();
+           cartServiceImpl.transferGuestCartToUser(session, user);
+           String token = jwtTokenUtil.generateToken(userSecurity);
            return ResponseEntity.ok(new AuthResponse(token, user.getEmail()));
        }
        catch (BadCredentialsException e) {
@@ -57,7 +63,7 @@ public class EntryController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<?> signup(@RequestBody SignupRequest signupRequest,HttpSession session) {
         try {
 
 
@@ -91,6 +97,9 @@ public class EntryController {
 
 
             userRepository.save(user);
+
+            // Transfer guest cart to user cart
+            cartServiceImpl.transferGuestCartToUser(session, user);
 
             // Authenticate the user to generate the JWT token
             Authentication authentication = new UsernamePasswordAuthenticationToken(userSecurity.getEmail(), signupRequest.getPassword());

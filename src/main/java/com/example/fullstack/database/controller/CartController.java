@@ -6,6 +6,7 @@ import com.example.fullstack.database.service.implementation.UserServiceImpl;
 import com.example.fullstack.security.repository.SecurityUserRepository;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.C;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,13 +51,14 @@ public class CartController {
     }
 
     @GetMapping("/get/{id}")
-    public ResponseEntity<String> getCartItem(@PathVariable Long id) {
+    public ResponseEntity<Cart> getCartItem(@PathVariable Long id) {
         System.out.println("Fetching cart item with ID: " + id);
         try {
             Optional<Cart> cart = cartServiceImpl.getCart(id);
-            return ResponseEntity.ok("Cart item retrieved successfully: " + cart.toString());
+            return cart.map(ResponseEntity::ok)
+                    .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 

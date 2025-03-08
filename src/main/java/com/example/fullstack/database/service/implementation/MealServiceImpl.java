@@ -35,8 +35,6 @@ public class MealServiceImpl implements MealService {
 
     @Override
     public Meal createServiceMeal(List<MenuItem> selectedItems) {
-
-
         return new Meal("Custom Combo", selectedItems);
     }
 

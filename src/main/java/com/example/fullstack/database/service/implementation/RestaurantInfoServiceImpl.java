@@ -17,4 +17,17 @@ public class RestaurantInfoServiceImpl implements RestaurantInfoService {
         restaurantInfoRepository.save(restaurantInfo);
 
     }
+
+    @Override
+    public void updateRestaurantOpenStatus(int restaurantId, boolean isOpen) {
+        RestaurantInfo restaurant = restaurantInfoRepository.findById(restaurantId)
+                .orElseThrow(() -> new RuntimeException("Restaurant not found"));
+        restaurant.setOpen(isOpen); // Update the isOpen status
+        restaurantInfoRepository.save(restaurant);
+    }
+
+    @Override
+    public void updateRestaurantInfo(RestaurantInfo restaurantInfo) {
+
+    }
 }

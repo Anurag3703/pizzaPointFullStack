@@ -2,105 +2,61 @@ package com.example.fullstack.database.model;
 
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
+
+
+@Data
 @Entity
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "cartId")
 public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private int cartId;
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-
-    private List<CartItem> cartItems = new ArrayList<>();
+    private List<CartItem> cartItems = new ArrayList<>();  //List of all cart items
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnoreProperties({"carts", "orders", "password", "role"})
-    private User user;
+    @JsonIgnore
+    private User user;    //Cart of a certain user
     private LocalDateTime createdAt;
     private BigDecimal totalPrice;
 
 
     @PrePersist
     protected void onCreate() {
-
         this.createdAt = LocalDateTime.now();
     }
 
-    public Cart() {
-    }
-
-
-    public Cart(int id,  List<CartItem> cartItems, User user, LocalDateTime createdAt, BigDecimal totalPrice) {
-        this.id = id;
-        this.cartItems = cartItems;
-        this.user = user;
-        this.createdAt = createdAt;
-        this.totalPrice = totalPrice;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-//    public BigDecimal getPricePerItem() {
-//        return menuItem.getPrice();
-//    }
-
-
     public BigDecimal getTotalPrice() {
-         return cartItems.stream()
+        BigDecimal totalCartPrice = cartItems.stream()
                 .map(CartItem::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
 
-    public void setTotalPrice(BigDecimal totalPrice) {
-        this.totalPrice = totalPrice;
-    }
+        BigDecimal deliveryFee = BigDecimal.valueOf(400);
 
-    public List<CartItem> getCartItems() {
-        return cartItems;
-    }
+        return totalCartPrice.add(deliveryFee);
 
-    public void setCartItems(List<CartItem> cartItems) {
-        this.cartItems = cartItems;
     }
 
     @Override
     public String toString() {
         return "Cart{" +
-                "id=" + id +
+                "id=" + cartId +
                 ", cartItems=" + cartItems +
                 ", user=" + user +
                 ", createdAt=" + createdAt +
