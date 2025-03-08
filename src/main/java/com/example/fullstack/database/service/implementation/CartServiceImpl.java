@@ -78,7 +78,8 @@ public class CartServiceImpl implements CartService {
         cart.getCartItems().add(cartItem);
         BigDecimal cartTotal = cart.getCartItems().stream()
                 .map(CartItem::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .add(BigDecimal.valueOf(400));
 
 
         cart.setTotalPrice(cartTotal);  //Final price in cart
@@ -132,7 +133,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public Optional<Cart> getCart(Long cartId) {
-        return Optional.empty();
+        return cartRepository.findById(cartId);
     }
 
     @Override
@@ -142,11 +143,26 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public List<Cart> getAllCartItems() {
-        return List.of();
+        User user = userService.getCurrentUser(); // Get the current user
+        if (user == null) {
+            throw new RuntimeException("User not authenticated"); // Handle case where user is not logged in
+        }
+        return cartRepository.findByUser(user);
     }
 
     @Override
     public List<Cart> getCartByUserEmail(String email) {
         return cartRepository.findByUserEmail(email);
     }
+
+    @Override
+    public void transferGuestCartToUser(HttpSession session, User user) {
+
+    }
+
+//    @Override
+//    public Cart getCartByUser(User user) {
+//        return null;
+//    }
 }
+

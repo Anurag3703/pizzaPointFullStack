@@ -8,5 +8,9 @@ public enum MenuItemCategory {
     BURGER,
     DESERT,
     SAUCE,
-    SIDE_DISH
+    SIDE_DISH,
+    ADD_ON,
+    FRIES_NUGGETS,
+    CHICKEN_MENU
+
 }

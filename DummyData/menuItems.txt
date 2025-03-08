@@ -1,0 +1,155 @@
+INSERT INTO menu_item (id, name, description, price, category, size, is_available, image_url)
+	VALUES
+	  ('PIZ_001', 'Margarita', 'Tomato sauce, cheese', 2899, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/margarita.jpg'),
+	  ('PIZ_002', 'Margarita', 'Tomato sauce, cheese', 4699, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/margarita.jpg'),
+
+	  ('PIZ_003', 'Extra Margarita', 'Tomato sauce, extra cheese', 2999, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/extra_margarita.jpg'),
+	  ('PIZ_004', 'Extra Margarita', 'Tomato sauce, extra cheese', 4799, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/extra_margarita.jpg'),
+
+	  ('PIZ_005', 'Pepperoni', 'Tomato sauce, pepperoni, cheese', 3700, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/pepperoni.jpg'),
+	  ('PIZ_006', 'Pepperoni', 'Tomato sauce, pepperoni, cheese', 4999, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/pepperoni.jpg'),
+
+	  ('PIZ_007', 'Vegetáriánus', 'Tomato sauce, mushrooms, green peppers, onions, cheese, tomatoes, black olives', 3799, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/vegetarian.jpg'),
+	  ('PIZ_008', 'Vegetáriánus', 'Tomato sauce, mushrooms, green peppers, onions, cheese, tomatoes, black olives', 5499, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/vegetarian.jpg'),
+
+	  ('PIZ_009', 'Miami', 'Tomato sauce, chicken slices, cheese, onion, black olives, chili, barbecue sauce', 3999, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/miami.jpg'),
+	  ('PIZ_010', 'Miami', 'Tomato sauce, chicken slices, cheese, onion, black olives, chili, barbecue sauce', 5299, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/miami.jpg'),
+
+	  ('PIZ_011', 'Reine', 'Tomato sauce, chicken slices, cheese, mushrooms', 3999, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/reine.jpg'),
+	  ('PIZ_012', 'Reine', 'Tomato sauce, chicken slices, cheese, mushrooms', 5299, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/reine.jpg'),
+
+	  ('PIZ_013', 'Spicy Hot', 'Tomato sauce, minced beef, tomato, jalapeno, cheese, onions', 4199, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/spicy_hot.jpg'),
+	  ('PIZ_014', 'Spicy Hot', 'Tomato sauce, minced beef, tomato, jalapeno, cheese, onions', 5499, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/spicy_hot.jpg'),
+
+	  ('PIZ_015', 'Maussaka', 'Tomato sauce, cheese, ground beef, mushrooms, onion, tomato, black olives, eggplant', 3999, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/maestro.jpg'),
+	  ('PIZ_016', 'Maussakka', 'Tomato sauce, cheese, ground beef, mushrooms, onion, tomato, black olives, eggplant', 5299, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/maestro.jpg'),
+
+	  ('PIZ_017', 'Hot Fajitas', 'Tomato sauce, chicken, onions, bell peppers, chili, cheese', 3850, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/hot_fajita.jpg'),
+	  ('PIZ_018', 'Hot Fajitas', 'Tomato sauce, chicken, onions, bell peppers, chili, cheese', 4999, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/hot_fajita.jpg'),
+
+	  ('PIZ_019', 'Buffalo', 'Tomato sauce, cheese, onion, green pepper, minced beef, barbecue sauce', 4199, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/buffalo.jpg'),
+	  ('PIZ_020', 'Buffalo', 'Tomato sauce, cheese, onion, green pepper, minced beef, barbecue sauce', 5599, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/buffalo.jpg'),
+
+	  ('PIZ_021', '4 Évszak', 'Tomato sauce, cheese, beef, bacon, mushrooms, black olives, artichokes', 3999, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/4_evszak.jpg'),
+	  ('PIZ_022', '4 Évszak', 'Tomato sauce, cheese, beef, bacon, mushrooms, black olives, artichokes', 5699, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/4_evszak.jpg'),
+
+	  ('PIZ_023', 'Fruits de Mer', 'Tomato sauce, fish cocktails, cheese', 3999, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/fruits_de_mer.jpg'),
+	  ('PIZ_024', 'Fruits de Mer', 'Tomato sauce, fish cocktails, cheese', 5699, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/fruits_de_mer.jpg'),
+
+	  ('PIZ_025', 'Occidental Ham & Corn', 'Tomato sauce, cheese, ham, corn', 3850, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/combos.jpg'),
+	  ('PIZ_026', 'Occidental Ham & Corn', 'Tomato sauce, cheese, ham, corn', 4999, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/combos.jpg'),
+
+	  ('PIZ_027', 'Tonata', 'Tomato sauce, cheese, tuna, onions, tomato', 3999, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/tonati.jpg'),
+	  ('PIZ_028', 'Tonata', 'Tomato sauce, cheese, tuna, onions, tomato', 4999, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/tonati.jpg'),
+
+	  ('PIZ_029', 'Mexikói', 'Tomato sauce, cheese, ground beef, beef sausage, green peppers', 4199, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/meat_lovers.jpg'),
+	  ('PIZ_030', 'Mexikói', 'Tomato sauce, cheese, ground beef, beef sausage, green peppers', 5499, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/meat_lovers.jpg'),
+
+	  ('PIZ_031', 'Indienna', 'Tomato sauce, Indienna sauce, tomato, cheese, chicken, green chilli, onion, tomato', 3799, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/indiana.jpg'),
+	  ('PIZ_032', 'Indienna', 'Tomato sauce, Indienna sauce, tomato, cheese, chicken, green chilli, onion, tomato', 4999, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/indiana.jpg'),
+
+	  ('PIZ_033', 'Samurai', 'Tomato sauce, cheese, chicken sausage, onion, samurai sauce', 4199, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/summer.jpg'),
+	  ('PIZ_034', 'Samurai', 'Tomato sauce, cheese, chicken sausage, onion, samurai sauce', 5299, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/summer.jpg'),
+
+	  ('PIZ_035', 'Pizza Point Special', 'Tomato sauce, cheese, special sauce, tomatoes, chicken, onion, black olives', 4199, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/special.jpg'),
+	  ('PIZ_036', 'Pizza Point Special', 'Tomato sauce, cheese, special sauce, tomatoes, chicken, onion, black olives', 5599, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/special.jpg'),
+
+	  ('PIZ_037', 'New York', 'Tomato sauce, cheese, Algerian sauce, chicken, minced beef, black olives', 4199, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/new_york.jpg'),
+	  ('PIZ_038', 'New York', 'Tomato sauce, cheese, Algerian sauce, chicken, minced beef, black olives', 5699, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/new_york.jpg'),
+
+	  ('PIZ_039', 'Michigun', 'Tomato sauce, salami, cheese, beef, tomato, black olives', 4199, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/chicken_supreme.jpg'),
+	  ('PIZ_040', 'Michigun', 'Tomato sauce, salami, cheese, beef, tomato, black olives', 5699, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/chicken_supreme.jpg'),
+
+	  ('PIZ_041', 'Beef Blast', 'Tomato sauce, cheese, beef bacon, minced beef', 4199, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/beef_blast.jpg'),
+	  ('PIZ_042', 'Beef Blast', 'Tomato sauce, cheese, beef bacon, minced beef', 5699, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/beef_blast.jpg'),
+
+	  ('PIZ_043', 'Garlic Delight', 'Garlic sauce, cheese, gyros, parsley', 3999, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/garlic_delight.jpg'),
+	  ('PIZ_044', 'Garlic Delight', 'Garlic sauce, cheese, gyros, parsley', 4999, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/garlic_delight.jpg'),
+
+	  ('PIZ_045', '4 Cheese', 'Sour cream, cheese, blue cheese, goat cheese', 3999, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/4_cheese.jpg'),
+	  ('PIZ_046', '4 Cheese', 'Sour cream, cheese, blue cheese, goat cheese', 5199, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/4_cheese.jpg'),
+
+	  ('PIZ_047', 'Gyros pizza', 'Tomato sauce, gyros, cheese, garlic sauce', 3999, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/gyros_pizza.jpg'),
+	  ('PIZ_048', 'Gyros pizza', 'Tomato sauce, gyros, cheese, garlic sauce', 4999, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/gyros_pizza.jpg'),
+
+	  ('PIZ_049', 'Chicken Chicka', 'Sour cream, curry sauce, cheese, chicken, onion', 3999, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/chicken_chicka.jpg'),
+	  ('PIZ_050', 'Chicken Chicka', 'Sour cream, curry sauce, cheese, chicken, onion', 5299, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/chicken_chicka.jpg'),
+
+	  ('PIZ_051', 'Tariflette', 'Sour cream, cheese, diced beef, onion', 3999, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/tariflette.jpg'),
+	  ('PIZ_052', 'Tariflette', 'Sour cream, cheese, diced beef, onion', 5299, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/tariflette.jpg'),
+
+	  ('PIZ_053', 'Chicago', 'Sour cream, cheese, minced beef, chicken slice, cheddar cheese', 4199, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/chicago.jpg'),
+	  ('PIZ_054', 'Chicago', 'Sour cream, cheese, minced beef, chicken slice, cheddar cheese', 5499, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/chicago.jpg'),
+
+	  ('PIZ_055', 'SOMO', 'Sour cream, salmon, cheese', 3999, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/somo.jpg'),
+	  ('PIZ_056', 'SOMO', 'Sour cream, salmon, cheese', 5999, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/somo.jpg'),
+
+	  ('PIZ_057', 'Chicken Supreme', 'Sour cream, cheese, chicken slices, chicken, onion', 4199, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/chicken_supreme.jpg'),
+	  ('PIZ_058', 'Chicken Supreme', 'Sour cream, cheese, chicken slices, chicken, onion', 5299, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/chicken_supreme.jpg'),
+
+	  ('PIZ_059', 'Párizsi', 'Sour cream, cheese, salami, mushrooms, diced beef', 4199, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/tajcsi.jpg'),
+	  ('PIZ_060', 'Párizsi', 'Sour cream, cheese, salami, mushrooms, diced beef', 5299, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/tajcsi.jpg'),
+
+	  ('PIZ_061', 'Fermier', 'Sour cream, cheese, chicken, corn', 4199, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/fermier.jpg'),
+	  ('PIZ_062', 'Fermier', 'Sour cream, cheese, chicken, corn', 5299, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/fermier.jpg'),
+
+	  ('PIZ_063', 'Country', 'Sour cream, cheese, minced beef, onion', 3699, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/country.jpg'),
+	  ('PIZ_064', 'Country', 'Sour cream, cheese, minced beef, onion', 4999, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/country.jpg'),
+
+	  ('PIZ_065', 'Chevre Miel', 'Sour cream, goat cheese, black olives, honey', 4199, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/chevre_miel.jpg'),
+	  ('PIZ_066', 'Chevre Miel', 'Sour cream, goat cheese, black olives, honey', 5499, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/chevre_miel.jpg'),
+
+	  ('PIZ_067', 'Meat Loaded', 'Tomato sauce, cheese, chicken, kebab, oregano', 4299, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/meat_loaded.jpg'),
+	  ('PIZ_068', 'Meat Loaded', 'Tomato sauce, cheese, chicken, kebab, oregano', 5899, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/meat_loaded.jpg'),
+
+	  ('PIZ_069', 'Kebab', 'Tajfol, green pepper, onion, kebab, cheese', 3999, 'PIZZA', 'MEDIUM', TRUE, 'https://example.com/images/kebab.jpg'),
+	  ('PIZ_070', 'Kebab', 'Tajfol, green pepper, onion, kebab, cheese', 4999, 'PIZZA', 'LARGE', TRUE, 'https://example.com/images/kebab.jpg'),
+
+	 ('CAL_001', 'Calzone Medium', 'Medium size Calzone - Halal crispy chicken with cheese and extra chicken. Halal Calzone.', 4490, 'CALZONE', 'MEDIUM', TRUE, 'https://example.com/images/calzone_medium.jpg'),
+	  ('CAL_002', 'Calzone Large', 'Big Calzone - Halal with crispy chicken cheese and extra chicken. Halal Calzone.', 5499, 'CALZONE', 'LARGE', TRUE, 'https://example.com/images/calzone_large.jpg');
+
+
+INSERT INTO menu_item (id, name, description, price, category, size, is_available, image_url)
+VALUES
+    ('BRG_001', 'Mega Beef burger', 'Mega Beef Burger - Two double tasty beef (H''A''L''A''L) patties, jalapeno, fresh vegetables and cheddar cheese in a soft, delicious bun', 3490, 'BURGER', 'REGULAR', TRUE, 'https://example.com/images/mega_beef_burger.jpg'),
+    ('BRG_002', 'Mega Chicken burger', 'Mega chicken burger - a delicious chicken patty (H''A''L''A''L), jalapeno, fresh vegetables and cheddar cheese in a soft, delicious bun', 3190, 'BURGER', 'REGULAR', TRUE, 'https://example.com/images/mega_chicken_burger.jpg'),
+    ('BRG_003', 'Classic Beef burger', 'Classic Beef burger - a tasty beef (H''A''L''A''L) patty, jalapenos, fresh vegetables and cheddar cheese on a soft, delicious bun', 2490, 'BURGER', 'REGULAR', TRUE, 'https://example.com/images/classic_beef_burger.jpg'),
+    ('BRG_004', 'Crispy Chicken Burger', 'Crispy chicken burger - crispy, juicy chicken patty with fresh lettuce, tomato and onion, jalapeno', 3490, 'BURGER', 'REGULAR', TRUE, 'https://example.com/images/crispy_chicken_burger.jpg');
+
+
+    INSERT INTO menu_item (id, name, description, price, category, size, is_available, image_url)
+VALUES
+    ('FRI_001', 'Potato Fries (Medium)', 'Potato Potato Medium', 1050, 'FRIES_NUGGETS', 'MEDIUM', TRUE, 'https://example.com/images/potato_fries_medium.jpg'),
+    ('FRI_002',	 'Potato Fries (Large)', 'Potato fries Great', 1350, 'FRIES_NUGGETS', 'LARGE', TRUE, 'https://example.com/images/potato_fries_large.jpg'),
+    ('NUG_001', 'Mozzarella Sticks 5pcs', '5 crispy mozzarella sticks - Cheese mozzarella sticks.', 2050, 'FRIES_NUGGETS', 'REGULAR', TRUE, 'https://example.com/images/mozzarella_sticks.jpg'),
+    ('ONR_001', 'Onion Rings 5pcs (Medium)', '5 (medium) fried onion rings', 1290, 'FRIES_NUGGETS', 'MEDIUM', TRUE, 'https://example.com/images/orion_rings_medium.jpg'),
+    ('CHN_001', 'Chicken Nuggets 8pcs (Large)', '8 (H''A''L''A''L) chicken nuggets', 3699, 'FRIES_NUGGETS', 'LARGE', TRUE, 'https://example.com/images/chicken_nuggets_large.jpg'),
+    ('ONR_002', 'Onion Rings 8pcs (Large)', '8 (large) fried onion rings', 1490, 'FRIES_NUGGETS', 'LARGE', TRUE, 'https://example.com/images/orion_rings_large.jpg'),
+    ('JAL_001', 'Jalapenos 5pcs', '5 chili cheese nuggets', 2050, 'FRIES_NUGGETS', 'REGULAR', TRUE, 'https://example.com/images/jalapetoe_spec.jpg'),
+    ('CHN_002', 'Chicken Nuggets 5pcs (Medium)', '5pcs (H''A''L''A''L) chicken nuggets', 3099, 'FRIES_NUGGETS', 'MEDIUM', TRUE, 'https://example.com/images/chicken_nuggets_medium.jpg'),
+    ('SMO_001', 'Mango Smoothies', 'Refreshing mango smoothies', 1590, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/mango_smoothies.jpg'),
+    ('COC_001', 'Coca-Cola 330 ml', 'Classic Coca-Cola', 699, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/coca_cola.jpg'),
+    ('FAN_001', 'Fanta 330 ml', 'Fruity Fanta', 699, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/fanta.jpg'),
+    ('HIL_001', 'HILL Classic 250 ml', 'HILL Classic drink', 450, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/hill_classic.jpg'),
+    ('CAN_001', 'Canada Dry Ginger Ale 500 ml', 'Refreshing ginger ale', 799, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/canada_dry.jpg'),
+    ('TOP_001', 'Topjoy 100% apple juice 250 ml', 'Pure apple juice', 799, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/topjoy_apple_juice.jpg'),
+    ('TOP_002', 'Topjoy Mango Apple Orange Lemon 250 ml', 'Mixed fruit juice', 799, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/topjoy_mixed.jpg'),
+    ('TOP_003', 'Topjoy Peach 250 ml', 'Peach juice', 799, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/topjoy_peach.jpg'),
+    ('WAT_001', 'Water', 'Pure drinking water', 450, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/water.jpg'),
+    ('COC_002', 'Coca-Cola Zero 330 ml', 'Sugar-free Coca-Cola', 699, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/coca_cola_zero.jpg'),
+    ('MON_001', 'Monster Energy 500 ml', 'Energy drink', 999, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/monster_energy.jpg'),
+    ('XIX_001', 'X-I-X-O Cola', 'Cola drink', 450, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/xixo_cola.jpg'),
+    ('SMO_002', 'Strawberry Smoothies', 'Refreshing strawberry smoothies', 1999, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/strawberry_smoothies.jpg'),
+    ('COC_003', 'Coca-Cola Zero Sugar 500 ml', 'Sugar-free Coca-Cola', 799, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/coca_cola_zero_sugar.jpg'),
+    ('GUA_001', 'Guarana', 'Guarana drink', 450, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/guarana.jpg'),
+    ('XIX_002', 'X-I-X-O Tutti Fruit', 'Fruity drink', 450, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/xixo_tutti_fruit.jpg'),
+    ('SPR_003', 'Sprite 500ml', 'Lemon-lime soda', 799, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/sprite_500ml.jpg'),
+    ('SPR_004', 'Sprite 330 ml', 'Lemon-lime soda', 699, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/sprite_330ml.jpg'),
+    ('PEP_001', 'Pepsi 500ml', 'Classic Pepsi', 799, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/pepsi_500ml.jpg'),
+    ('MER_001', 'Merinda 500ml', 'Fruity soda', 799, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/merinda_500ml.jpg'),
+    ('CAP_002', 'Cappy Ice Fruit 500ml', 'Fruit-flavored drink', 799, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/cappy_ice_fruit.jpg'),
+    ('SEV_002', '7UP 500ml', 'Lemon-lime soda', 799, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/7up_500ml.jpg'),
+    ('COC_005', 'Coca Cola Cherry 330ml', 'Cherry-flavored Coca-Cola', 699, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/coca_cola_cherry_330ml.jpg'),
+    ('MTN_002', 'Mountain Dew 500ml', 'Citrus-flavored soda', 799, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/mountain_dew_500ml.jpg'),
+    ('STL_002', 'Strawberry-Lime 500ml 0% drink', 'Strawberry-lime flavored drink', 699, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/strawberry_lime_500ml.jpg'),
+    ('BUR_002', 'Burn Energy Drink 250ml', 'Energy drink', 450, 'DRINKS', 'REGULAR', TRUE, 'https://example.com/images/burn_energy_250ml.jpg');

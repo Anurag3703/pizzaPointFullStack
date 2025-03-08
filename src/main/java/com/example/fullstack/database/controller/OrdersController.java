@@ -15,6 +15,7 @@ import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import java.io.File;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -43,7 +44,7 @@ public class OrdersController {
     }
 
     @PatchMapping("/{id}/status")
-    public String updateOrderStatus(@PathVariable Long id, @RequestBody Status status) {
+    public String updateOrderStatus(@PathVariable String id, @RequestBody Status status) {
         try{
             Status newStatus = Status.valueOf(status.toUpperCase());
             ordersServiceImpl.updateOrderStatus(id, newStatus);
@@ -69,10 +70,10 @@ public class OrdersController {
 
     @PostMapping("/checkout")
 
-    public ResponseEntity<String> checkout(@RequestParam PaymentMethod paymentMethod, @RequestParam String address) {
+    public ResponseEntity<String> checkout(@RequestParam PaymentMethod paymentMethod, @RequestParam String address,HttpSession session) {
         try {
             // Call the service to process the checkout
-            ordersServiceImpl.processCheckout(paymentMethod,address);
+            ordersServiceImpl.processCheckout(session, paymentMethod, address);
 
             return ResponseEntity.ok("Order placed successfully!");
         } catch (Exception e) {

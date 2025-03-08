@@ -95,6 +95,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -125,12 +126,12 @@ public class SecurityConfig {
                 //    .httpBasic(Customizer.withDefaults())
                 .cors(cors->    cors.configurationSource(corsConfigurationSource()))
                 .addFilterBefore(jwtValidationFilter, UsernamePasswordAuthenticationFilter.class)
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/menuItem/**").hasRole("USER")
-//                        .anyRequest().permitAll())
 
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-
+                .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Create session when needed
+                .maximumSessions(1) // Prevent multiple sessions per user
+                .maxSessionsPreventsLogin(false))
                 .csrf(AbstractHttpConfigurer::disable)
                 .build();
     }

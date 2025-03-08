@@ -1,5 +1,6 @@
 package com.example.fullstack.database.service;
 
+import com.example.fullstack.database.model.Cart;
 import com.example.fullstack.database.model.User;
 
 import java.util.List;
@@ -11,6 +12,7 @@ public interface UserService {
     Optional<User> getUserById(Long id);
     List<User> addAllUsers(List<User> users);
     User getCurrentUser();
+
 
 
 }

@@ -55,28 +55,30 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    public void updateOrderStatus(Long orderId, Status status) {
+    public void updateOrderStatus(String orderId, Status status) {
         Orders order = ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found" + orderId));
 
         order.setStatus(status);
         ordersRepository.save(order);
     }
 
+
+
+
     @Override
     @Transactional
-    public Orders processCheckout(PaymentMethod paymentMethod, String address) {
+    public Orders processCheckout(HttpSession session, PaymentMethod paymentMethod, String address) {
+        // Retrieve the current user
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        // Check if principal is a UserSecurity object
         if (!(principal instanceof UserSecurity)) {
-            throw new RuntimeException("No user is logged in or invalid user type");
+            throw new RuntimeException("User must be logged in to checkout");
         }
 
         // Convert UserSecurity to User
         UserSecurity userSecurity = (UserSecurity) principal;
         User user = getUserFromUserSecurity(userSecurity);
 
-        // Retrieve the user's cart (each user has only one cart)
+        // Retrieve the user's cart
         Cart cart = cartRepository.findByUser(user).stream()
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("No cart found for the user"));
@@ -104,17 +106,16 @@ public class OrdersServiceImpl implements OrdersService {
         // Save the order to the database
         ordersRepository.save(order);
 
-        // Create order items future use
+        // Create order items from cart items
         for (CartItem cartItem : cart.getCartItems()) {
             createOrderItemFromCart(cartItem, order);
         }
 
-        // Clear the cart items
+        // Clear the cart
         cartRepository.deleteByUser(user);
 
         return order;
     }
-
     private void createOrderItemFromCart(CartItem cartItem, Orders order) {
         OrderItem orderItem = new OrderItem();
         orderItem.setMenuItem(cartItem.getMenuItem());
@@ -125,7 +126,7 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    public Orders getOrderById(Long orderId) {
+    public Orders getOrderById(String orderId) {
         return ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found" + orderId));
     }
 
