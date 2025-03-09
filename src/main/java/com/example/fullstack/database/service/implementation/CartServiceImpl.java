@@ -33,7 +33,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    public void addItemToCart(HttpSession session, String menuItemId, Long quantity, List<String> extraItemId) {
+    public void addItemToCart(HttpSession session, String menuItemId, Long quantity, List<String> extraItemId,String instructions) {
         User currentUser = userService.getCurrentUser();
         MenuItem menuItem = menuItemRepository.findById(menuItemId)
                 .orElseThrow(() -> new RuntimeException("Menu Item Not Found"));
@@ -59,6 +59,7 @@ public class CartServiceImpl implements CartService {
             cartItem.setMenuItem(menuItem);
             cartItem.setQuantity(quantity);
             cartItem.setExtras(extras);
+            cartItem.setInstruction(instructions);
         } else {
             cartItem.setQuantity(cartItem.getQuantity() + quantity); // If cartItem is same just quantity is increased
         }

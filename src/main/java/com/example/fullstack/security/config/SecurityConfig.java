@@ -128,10 +128,10 @@ public class SecurityConfig {
                 .addFilterBefore(jwtValidationFilter, UsernamePasswordAuthenticationFilter.class)
 
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-                .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Create session when needed
-                .maximumSessions(1) // Prevent multiple sessions per user
-                .maxSessionsPreventsLogin(false))
+//                .sessionManagement(session -> session
+//                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Create session when needed
+//                .maximumSessions(1) // Prevent multiple sessions per user
+//                .maxSessionsPreventsLogin(false))
                 .csrf(AbstractHttpConfigurer::disable)
                 .build();
     }
