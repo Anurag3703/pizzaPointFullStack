@@ -38,7 +38,7 @@ public class CartItem {
     private List<Extra> extras;     // CartItem --> Extras  ---> (CartItem_Id, Extras_Id)
     private Long quantity;
     private BigDecimal totalPrice;
-    private String description;
+    private String instruction;
 
     public BigDecimal getTotalPrice() {
         BigDecimal basePrice = menuItem.getPrice().multiply(BigDecimal.valueOf(quantity));

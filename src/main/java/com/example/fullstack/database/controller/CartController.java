@@ -31,9 +31,13 @@ public class CartController {
     }
 
     @PostMapping("/add-to-cart")
-    public ResponseEntity<String> addCartItem(HttpSession session, @RequestParam String menuItemId, @RequestParam Long quantity,@RequestParam List<String> extraItemId) {
+    public ResponseEntity<String> addCartItem(HttpSession session
+            , @RequestParam String menuItemId
+            , @RequestParam Long quantity
+            ,@RequestParam(required = false)List<String> extraItemId
+            ,@RequestParam(required = false) String instructions) {
         try {
-            cartServiceImpl.addItemToCart(session, menuItemId, quantity,extraItemId);
+            cartServiceImpl.addItemToCart(session, menuItemId, quantity,extraItemId, instructions);
             return ResponseEntity.ok("Item added to cart successfully");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error adding item to cart: " + e.getMessage());
