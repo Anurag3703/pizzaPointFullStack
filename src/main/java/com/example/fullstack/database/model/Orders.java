@@ -1,5 +1,6 @@
 package com.example.fullstack.database.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -7,6 +8,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,7 +28,9 @@ public class Orders {
     @Enumerated(EnumType.STRING)
     private Status status;
     private LocalDate date;
-    private String address;
+    @ManyToOne
+    @JoinColumn(name = "address_id", nullable = false)
+    private Address address;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     @ManyToOne
@@ -35,8 +39,11 @@ public class Orders {
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
 
-    @OneToMany(mappedBy = "order")
-    private List<OrderItem> orderItems;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItems = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    private OrderType orderType;
 
     @PrePersist
     public void generateId() {
@@ -46,10 +53,11 @@ public class Orders {
     }
 
     public BigDecimal getTotalPrice() {
-        // Calculate total price dynamically based on order items
         BigDecimal total = BigDecimal.ZERO;
-        for (OrderItem item : orderItems) {
-            total = total.add(item.getTotalPrice());
+        if (orderItems != null) {
+            for (OrderItem item : orderItems) {
+                total = total.add(item.getTotalPrice());
+            }
         }
         return total;
     }

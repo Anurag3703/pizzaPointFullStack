@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,18 +24,21 @@ public class OrdersServiceImpl implements OrdersService {
     private final MenuItemRepository menuItemRepository;
      OrdersRepository ordersRepository;
      private final UserRepository userRepository;
+     private final AddressRepository addressRepository;
 
 
 
     public OrdersServiceImpl(OrdersRepository ordersRepository, OrderItemRepository orderItemRepository
             , CartRepository cartRepository
             , MenuItemRepository menuItemRepository
-            , UserRepository userRepository) {
+            , UserRepository userRepository
+            , AddressRepository addressRepository) {
         this.ordersRepository = ordersRepository;
         this.orderItemRepository = orderItemRepository;
         this.cartRepository = cartRepository;
         this.menuItemRepository = menuItemRepository;
         this.userRepository = userRepository;
+        this.addressRepository = addressRepository;
     }
 
 
@@ -67,7 +71,7 @@ public class OrdersServiceImpl implements OrdersService {
 
     @Override
     @Transactional
-    public Orders processCheckout(HttpSession session, PaymentMethod paymentMethod, String address) {
+    public Orders processCheckout(HttpSession session) {
         // Retrieve the current user
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!(principal instanceof UserSecurity)) {
@@ -95,40 +99,49 @@ public class OrdersServiceImpl implements OrdersService {
         // Create a new order
         Orders order = new Orders();
         order.setUser(user);
-        order.setPaymentMethod(paymentMethod);
-        order.setAddress(address);
-        order.setStatus(Status.PENDING);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
         order.setTotalPrice(totalPrice);
         order.setDate(LocalDate.now());
 
-        // Save the order to the database
-        ordersRepository.save(order);
-
-        // Create order items from cart items
+        List<OrderItem> orderItems = new ArrayList<>();
         for (CartItem cartItem : cart.getCartItems()) {
-            createOrderItemFromCart(cartItem, order);
+            OrderItem orderItem = createOrderItemFromCart(cartItem, order, session); // Pass the session
+            orderItems.add(orderItem);
         }
+        order.setOrderItems(orderItems);
+        session.setAttribute("pendingOrder", order);
 
         // Clear the cart
-        cartRepository.deleteByUser(user);
+        //cartRepository.deleteByUser(user);
 
         return order;
     }
-    private void createOrderItemFromCart(CartItem cartItem, Orders order) {
+    private OrderItem createOrderItemFromCart(CartItem cartItem, Orders order, HttpSession session) {
         OrderItem orderItem = new OrderItem();
         orderItem.setMenuItem(cartItem.getMenuItem());
         orderItem.setQuantity(cartItem.getQuantity());
-        orderItem.setPricePerItem(cartItem.getMenuItem().getPrice());
+        orderItem.setPricePerItem(cartItem.getTotalPrice());
         orderItem.setOrder(order);  // Associate with the order
-        orderItemRepository.save(orderItem);
+        if(cartItem.getExtras() != null && !cartItem.getExtras().isEmpty()) {
+            orderItem.setExtras(new ArrayList<>(cartItem.getExtras()));
+        }
+        List<OrderItem> sessionOrderItems = (List<OrderItem>) session.getAttribute("orderItems");
+        if(sessionOrderItems == null) {
+            sessionOrderItems = new ArrayList<>();
+        }
+
+        sessionOrderItems.add(orderItem);
+        session.setAttribute("orderItems", sessionOrderItems);
+        return orderItem;
     }
 
     @Override
     public Orders getOrderById(String orderId) {
         return ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found" + orderId));
     }
+
+
 
     public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -154,5 +167,72 @@ public class OrdersServiceImpl implements OrdersService {
         //        .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+
+    @Override
+    @Transactional
+    public Orders confirmCheckout(PaymentMethod paymentMethod,  OrderType orderType, HttpSession session) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof UserSecurity)) {
+            throw new RuntimeException("User must be logged in to confirm checkout");
+        }
+
+        // Convert UserSecurity to User
+        UserSecurity userSecurity = (UserSecurity) principal;
+        User currentUser = getUserFromUserSecurity(userSecurity);
+
+        Orders order = (Orders) session.getAttribute("pendingOrder");
+        if(order == null) {
+            throw new RuntimeException("No pending order found in your session");
+        }
+
+        if (!order.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Unauthorized: This order does not belong to the current user");
+        }
+
+        List<OrderItem> orderItems = (List<OrderItem>) session.getAttribute("orderItems");
+        if(orderItems == null || orderItems.isEmpty()) {
+            throw new RuntimeException("No order items found in your session");
+        }
+
+        Address selectedAddress = addressRepository.findByUserAndSelected(currentUser, true);
+        if (selectedAddress == null) {
+            throw new RuntimeException("No selected address found for the current user");
+        }
+
+        order.setAddress(selectedAddress);
+
+        if (paymentMethod == null) {
+            throw new RuntimeException("Payment method is required");
+        }
+
+
+        if (orderType == null) {
+            throw new RuntimeException("Order type is required");
+        }
+
+        order.setPaymentMethod(paymentMethod);
+        order.setOrderType(orderType);
+
+        if (paymentMethod == PaymentMethod.CASH) {
+            order.setStatus(Status.PLACED);
+        } else {
+            order.setStatus(Status.PENDING);
+        }
+        ordersRepository.save(order);
+
+        for(OrderItem orderItem : orderItems) {
+            orderItem.setOrder(order);
+            orderItemRepository.save(orderItem);
+        }
+
+        session.removeAttribute("orderItems");
+        session.removeAttribute("orderItems");
+
+        cartRepository.deleteByUser(currentUser);
+
+        return order;
+
+
+    }
 
 }

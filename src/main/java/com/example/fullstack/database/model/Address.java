@@ -1,6 +1,7 @@
 package com.example.fullstack.database.model;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,7 +21,8 @@ public class Address {
     private String apartmentNo;
     private String street;
     private String otherInstructions;
-    private boolean isSelected;
+    private boolean selected;
+    private boolean recent;
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

@@ -1,6 +1,7 @@
 package com.example.fullstack.database.service;
 
 import com.example.fullstack.database.model.Cart;
+import com.example.fullstack.database.model.CartItem;
 import com.example.fullstack.database.model.User;
 import jakarta.servlet.http.HttpSession;
 
@@ -17,5 +18,10 @@ public interface CartService {
     List<Cart> getAllCartItems();
     List<Cart> getCartByUserEmail(String email);
     void transferGuestCartToUser(HttpSession session, User user);
+    BigDecimal calculateCartItemTotalPrice(CartItem cartItem);
+    BigDecimal calculateCartTotalPrice(Cart cart);
+
+
+    Cart getCurrentUserCart();
     //Cart getCartByUser(User user);
 }

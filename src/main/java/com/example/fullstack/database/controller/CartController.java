@@ -1,12 +1,16 @@
 package com.example.fullstack.database.controller;
 
+import com.example.fullstack.config.ModelMapperConfig;
+import com.example.fullstack.database.dto.CartDTO;
+import com.example.fullstack.database.dto.CartItemDTO;
 import com.example.fullstack.database.model.Cart;
 import com.example.fullstack.database.service.implementation.CartServiceImpl;
 import com.example.fullstack.database.service.implementation.UserServiceImpl;
 import com.example.fullstack.security.repository.SecurityUserRepository;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.C;
+
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -21,13 +26,17 @@ import java.util.Optional;
 public class CartController {
 
     private final SecurityUserRepository securityUserRepository;
+    private final ModelMapperConfig modelMapperConfig;
     CartServiceImpl cartServiceImpl;
     UserServiceImpl userServiceImpl;
+    ModelMapper modelMapper;
 
-    public CartController(CartServiceImpl cartServiceImpl, UserServiceImpl userServiceImpl, SecurityUserRepository securityUserRepository) {
+    public CartController(CartServiceImpl cartServiceImpl, UserServiceImpl userServiceImpl, SecurityUserRepository securityUserRepository, ModelMapperConfig modelMapperConfig,ModelMapper modelMapper) {
         this.cartServiceImpl = cartServiceImpl;
         this.userServiceImpl = userServiceImpl;
         this.securityUserRepository = securityUserRepository;
+        this.modelMapperConfig = modelMapperConfig;
+        this.modelMapper = modelMapper;
     }
 
     @PostMapping("/add-to-cart")
@@ -67,10 +76,42 @@ public class CartController {
     }
 
     @GetMapping("/get/allCartItems")
-    public List<Cart> getAllCartItems() {
-        return cartServiceImpl.getAllCartItems();
+    public List<CartDTO> getAllCartItems() {
+       List<Cart> carts = cartServiceImpl.getAllCartItems();
+       List<CartDTO> cartDTO = carts.stream()
+               .map(this::convertToDTO)
+        .collect(Collectors.toList());
+        return cartDTO;
+
 
     }
+
+    private CartDTO convertToDTO(Cart cart) {
+        CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
+
+        // Map cart items manually
+        List<CartItemDTO> itemsDTO = cart.getCartItems().stream().map(item -> {
+            CartItemDTO itemDTO = new CartItemDTO();
+            itemDTO.setCartItemId(item.getCartItemId());
+            itemDTO.setCartId((int) cart.getCartId());
+            itemDTO.setMenuItemId(item.getMenuItem().getId());
+            itemDTO.setQuantity(item.getQuantity());
+            itemDTO.setTotalPrice(item.getTotalPrice());
+            itemDTO.setInstruction(item.getInstruction());
+
+            // Map extras properly
+            List<String> extraIds = item.getExtras().stream()
+                    .map(extra -> (extra.getId()))
+                    .collect(Collectors.toList());
+            itemDTO.setExtraIds(extraIds);
+
+            return itemDTO;
+        }).collect(Collectors.toList());
+
+        cartDTO.setCartItems(itemsDTO);
+        return cartDTO;
+    }
+
 
     @GetMapping("/user-email")
     public ResponseEntity<List<Cart>> getCartByUserEmail(@RequestParam String email) {

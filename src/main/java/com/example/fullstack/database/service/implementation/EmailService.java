@@ -19,7 +19,7 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
-    public void sendEmailWithAttachment(String toEmail, String subject, String text, File attachment) throws Exception {
+    public void sendEmailWithAttachment(String toEmail, String subject, String text) throws Exception {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
@@ -27,9 +27,6 @@ public class EmailService {
         helper.setTo(toEmail);
         helper.setSubject(subject);
         helper.setText(text);
-
-        helper.addAttachment("Invoice.pdf", attachment);
-
         mailSender.send(message);
     }
 
