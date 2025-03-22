@@ -3,6 +3,7 @@ package com.example.fullstack.database.controller;
 import com.example.fullstack.database.model.Address;
 import com.example.fullstack.database.service.implementation.AddressServiceImpl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -30,7 +31,7 @@ public class AddressController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Selected address not found"));
     }
 
-    @PostMapping("/add")
+    @PostMapping(value = "/add",consumes = "application/json")
     public ResponseEntity<String> addAddress(@RequestBody Address address) {
         try {
             addressServiceImpl.saveAddress(address);

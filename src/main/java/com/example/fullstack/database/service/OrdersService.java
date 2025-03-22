@@ -15,10 +15,11 @@ public interface OrdersService {
     List<Orders> addAllOrders(List<Orders> orders);
     void updateOrder(Orders order);
     void updateOrderStatus(String orderId, Status status);
-    Orders  processCheckout(HttpSession session,  PaymentMethod paymentMethod, String address);
+    Orders  processCheckout(HttpSession session);
 
 
     Orders  getOrderById(String orderId);
+    Orders confirmCheckout(PaymentMethod paymentMethod, OrderType orderType,HttpSession session);
 
 
 }

@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,6 +23,7 @@ public class CartServiceImpl implements CartService {
     private final MenuItemRepository menuItemRepository;
     private final CartItemRepository cartItemRepository;
 
+    @Autowired
     public CartServiceImpl(CartRepository cartRepository, ExtraRepository extraRepository,
                            UserService userService, MenuItemRepository menuItemRepository,CartItemRepository cartItemRepository) {
         this.cartRepository = cartRepository;
@@ -83,7 +85,7 @@ public class CartServiceImpl implements CartService {
                 .add(BigDecimal.valueOf(400));
 
 
-        cart.setTotalPrice(cartTotal);  //Final price in cart
+        cart.setTotalPrice(calculateCartTotalPrice(cart));  //Final price in cart
         cartRepository.save(cart); // Save Cart
     }
 
@@ -100,7 +102,6 @@ public class CartServiceImpl implements CartService {
 
             //Case 1 : When Quantity is zero
             if (quantity <= 0) {
-
                 cart.getCartItems().remove(cartItem);  // Removed from the List of cart item in the Cart
                 cartItemRepository.delete(cartItem);   //Removed from CartItem table
 
@@ -161,9 +162,41 @@ public class CartServiceImpl implements CartService {
 
     }
 
+    @Override
+    public BigDecimal calculateCartItemTotalPrice(CartItem cartItem) {
+        BigDecimal basePrice = cartItem.getMenuItem().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+        BigDecimal extraPrice = cartItem.getExtras().stream()
+                .map(Extra::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+
+        return basePrice.add(extraPrice);
+    }
+
+    @Override
+    public BigDecimal calculateCartTotalPrice(Cart cart) {
+        BigDecimal totalCartPrice = cart.getCartItems().stream()
+                .map(CartItem::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal deliveryFee = BigDecimal.valueOf(400);  // Fixed delivery fee
+        return totalCartPrice.add(deliveryFee);
+    }
+
+
+    @Override
+    public Cart getCurrentUserCart() {
+        User currentUser = userService.getCurrentUser();
+        return cartRepository.findByUser(currentUser)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Cart not found for the current user"));
+    }
+}
+
 //    @Override
 //    public Cart getCartByUser(User user) {
 //        return null;
 //    }
-}
+
 

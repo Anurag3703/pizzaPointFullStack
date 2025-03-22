@@ -2,6 +2,7 @@ package com.example.fullstack.database.model;
 
 public enum Status {
     PENDING,          // Order has been placed, but not yet processed
+    PLACED,
     PREPARING,        // Pizza is being prepared
     READY_FOR_PICKUP, // Pizza is ready to be delivered or picked up
     OUT_FOR_DELIVERY, // Pizza is out for delivery to the customer

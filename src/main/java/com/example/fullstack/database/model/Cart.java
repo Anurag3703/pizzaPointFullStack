@@ -26,15 +26,24 @@ public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int cartId;
+
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<CartItem> cartItems = new ArrayList<>();  //List of all cart items
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnoreProperties({"carts", "orders", "password", "role"})
     @JsonIgnore
     private User user;    //Cart of a certain user
+
+
     private LocalDateTime createdAt;
+
+
     private BigDecimal totalPrice;
+
+
+    private String sessionId;
 
 
     @PrePersist
@@ -42,15 +51,13 @@ public class Cart {
         this.createdAt = LocalDateTime.now();
     }
 
-    public BigDecimal getTotalPrice() {
-        BigDecimal totalCartPrice = cartItems.stream()
+
+    public void calculateCartTotalPrice() {
+        BigDecimal cartTotalPrice = cartItems.stream()
                 .map(CartItem::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
+                .reduce(BigDecimal.ZERO,BigDecimal::add);
         BigDecimal deliveryFee = BigDecimal.valueOf(400);
-
-        return totalCartPrice.add(deliveryFee);
-
+        this.totalPrice = cartTotalPrice.add(deliveryFee);
     }
 
     @Override

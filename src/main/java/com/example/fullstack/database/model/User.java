@@ -1,9 +1,7 @@
 package com.example.fullstack.database.model;
 
 import com.example.fullstack.security.model.UserSecurity;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,7 +14,6 @@ import java.util.UUID;
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Getter
 @Setter
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
@@ -28,13 +25,15 @@ public class User {
     private String phone;
     private String email;
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id")
-    @JsonBackReference   //forward side of the relationship
+    @JoinColumn(name = "user_security_id")
     private UserSecurity userSecurity;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Orders> orders;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Review> reviews;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Address> addresses;
 
     public User(String name, String address, String phone, String email) {
         this.name = name;
