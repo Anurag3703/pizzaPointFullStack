@@ -78,6 +78,16 @@ public class AddressServiceImpl implements AddressService {
             addressRepository.saveAll(userAddresses);
         }
 
+        long addressCount = addressRepository.countByUser(currentUser);
+
+        // If there are already 3 addresses, delete the oldest one
+        if (addressCount >= 100) {
+            Address oldestAddress = addressRepository.findTopByUserOrderByCreatedDateTimeAsc(currentUser);
+            if (oldestAddress != null) {
+                addressRepository.delete(oldestAddress);
+            }
+        }
+
         // Save the new address
         addressRepository.save(address);
     }
