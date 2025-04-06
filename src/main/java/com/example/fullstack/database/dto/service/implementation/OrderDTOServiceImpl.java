@@ -47,7 +47,10 @@ public class OrderDTOServiceImpl implements OrderDTOService {
         userDTO.setPhone(order.getUser().getPhone());
         dto.setUser(userDTO);
 
-        AddressDTO addressDTO = getAddressDTO(order);
+        AddressDTO addressDTO = null;
+        if (order.getAddress() != null) {
+            addressDTO = getAddressDTO(order);
+        }
         dto.setAddress(addressDTO);
         
         dto.setOrderItems(orderItemDTOList);
@@ -55,6 +58,10 @@ public class OrderDTOServiceImpl implements OrderDTOService {
     }
 
     private static AddressDTO getAddressDTO(Orders order) {
+
+        if (order.getAddress() == null) {
+            return null;
+        }
         AddressDTO addressDTO = new AddressDTO();
         addressDTO.setAddressId(order.getAddress().getAddressId());
         addressDTO.setFloor(order.getAddress().getFloor());
