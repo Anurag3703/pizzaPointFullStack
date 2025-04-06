@@ -79,9 +79,10 @@ public class OrdersController {
         try {
             // Call the service to process the checkout
             Orders order = ordersServiceImpl.processCheckout(session);
+            OrderDTO orderDTO = orderDTOServiceImpl.convertToDTO(order);
 
 
-            return ResponseEntity.ok(order);
+            return ResponseEntity.ok(orderDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error during checkout: " + e.getMessage());
         }
