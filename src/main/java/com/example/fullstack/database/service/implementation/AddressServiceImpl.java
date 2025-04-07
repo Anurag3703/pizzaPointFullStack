@@ -103,4 +103,9 @@ public class AddressServiceImpl implements AddressService {
     public Address getAddressByUserAndIsSelected(User user, boolean isSelected) {
         return addressRepository.findByUserAndSelected(user,isSelected);
     }
+
+    @Override
+    public Address getAddressById(Long id) {
+        return addressRepository.findById(id).orElse(null);
+    }
 }

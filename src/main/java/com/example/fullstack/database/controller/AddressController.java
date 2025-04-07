@@ -57,4 +57,16 @@ public class AddressController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
     }
+
+    @GetMapping("/address/{id}")
+    public ResponseEntity<?> getAddressById(@PathVariable long id) {
+        try {
+            Address address = addressServiceImpl.getAddressById(id);
+            return ResponseEntity.ok(modelMapper.map(address, AddressDTO.class));
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+
+    }
+
 }

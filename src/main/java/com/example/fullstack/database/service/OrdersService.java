@@ -16,6 +16,7 @@ public interface OrdersService {
     void updateOrder(Orders order);
     void updateOrderStatus(String orderId, Status status);
     Orders  processCheckout(HttpSession session);
+    List<Orders> getAllOrders();
 
 
     Orders  getOrderById(String orderId);

@@ -12,4 +12,5 @@ public interface AddressService {
     void saveAddress(Address address);
     void addAddress(Address address);
     Address getAddressByUserAndIsSelected(User user, boolean isSelected);
+    Address getAddressById(Long id);
 }
