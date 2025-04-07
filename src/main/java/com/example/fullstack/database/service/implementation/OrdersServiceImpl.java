@@ -117,6 +117,12 @@ public class OrdersServiceImpl implements OrdersService {
 
         return order;
     }
+
+    @Override
+    public List<Orders> getAllOrders() {
+        return ordersRepository.findAll();
+    }
+
     private OrderItem createOrderItemFromCart(CartItem cartItem, Orders order, HttpSession session) {
         OrderItem orderItem = new OrderItem();
         orderItem.setMenuItem(cartItem.getMenuItem());

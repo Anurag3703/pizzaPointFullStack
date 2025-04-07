@@ -11,6 +11,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import java.io.File;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -88,6 +89,17 @@ public class OrdersController {
         }
     }
 
+    @GetMapping("/all/orders")
+    public ResponseEntity<?> getAllOrders() {
+       try{ List<Orders> orders = ordersServiceImpl.getAllOrders();
+       List<OrderDTO> dto = orders.stream()
+                .map(orderDTOServiceImpl::convertToDTO)
+                .collect(Collectors.toList());
+       return ResponseEntity.ok(dto);
+       } catch (Exception e) {
+           return ResponseEntity.badRequest().body("Error during checkout: " + e.getMessage());
+       }
+    }
 
     private String getStatusMessage(Status status) {
         return switch (status) {
