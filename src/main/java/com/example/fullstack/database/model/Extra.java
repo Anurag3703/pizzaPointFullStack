@@ -21,7 +21,9 @@ public class Extra {
     @Id
     @NotNull
     private String id;
+    @NotNull
     private String name;
+    @NotNull
     private BigDecimal price;
 
 

@@ -3,6 +3,7 @@ package com.example.fullstack.database.model;
 import com.example.fullstack.security.model.UserSecurity;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.List;
@@ -20,9 +21,13 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+    @NotNull
     private String name;
+    @NotNull
     private String address;
+    @NotNull
     private String phone;
+    @NotNull
     private String email;
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_security_id")

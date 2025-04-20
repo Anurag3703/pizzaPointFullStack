@@ -18,8 +18,8 @@
             this.menuItemServiceImpl = menuItemServiceImpl;
         }
 
-
-        @PostMapping
+        @PreAuthorize("hasRole('ADMIN')")
+        @PostMapping("/add")
         public String addMenuItems(@RequestBody MenuItem menuItem) {
             menuItemServiceImpl.addMenuItem(menuItem);
             return "Success";
@@ -31,7 +31,7 @@
 
 
 
-        @PostMapping("/all")
+        @PostMapping("/add-all")
         public String addMenuItems(@RequestBody List<MenuItem> menuItems) {
             menuItemServiceImpl.addAllMenuItems(menuItems);
             return "Success";
