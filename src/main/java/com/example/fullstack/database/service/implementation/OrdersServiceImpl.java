@@ -6,6 +6,7 @@ import com.example.fullstack.database.service.OrdersService;
 import com.example.fullstack.security.model.UserSecurity;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -121,6 +122,29 @@ public class OrdersServiceImpl implements OrdersService {
     @Override
     public List<Orders> getAllOrders() {
         return ordersRepository.findAll();
+    }
+
+    @Override
+    public List<Orders> getOrdersByUser(Long userId) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof UserSecurity)) {
+            throw new RuntimeException("User must be logged in to checkout");
+        }
+
+        // Convert UserSecurity to User
+        UserSecurity userSecurity = (UserSecurity) principal;
+        User user = getUserFromUserSecurity(userSecurity);
+
+        try {
+             List<Orders> order = ordersRepository.findByUserId(userId);
+             if(order.isEmpty()) {
+                 throw new RuntimeException("Customer Has no orders");
+             }else {
+                 return order;
+             }
+        }catch (RuntimeException e) {
+            throw e;
+        }
     }
 
     private OrderItem createOrderItemFromCart(CartItem cartItem, Orders order, HttpSession session) {

@@ -3,6 +3,7 @@ package com.example.fullstack.database.controller;
 import com.example.fullstack.database.model.User;
 import com.example.fullstack.database.service.implementation.UserServiceImpl;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,6 +36,13 @@ public class UserController {
     public List<User> getAllUsers(@RequestBody List<User> users) {
         return userServiceImpl.addAllUsers(users);
     }
+
+    @PostMapping("/delete/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        userServiceImpl.deleteUser(id);
+        return ResponseEntity.ok("Deleted User: " + id);
+    }
+
 
 
 

@@ -1,6 +1,8 @@
 package com.example.fullstack.database.service.implementation;
 
+import com.example.fullstack.database.model.DeletedUser;
 import com.example.fullstack.database.model.User;
+import com.example.fullstack.database.repository.DeletedUserRepository;
 import com.example.fullstack.database.repository.UserRepository;
 import com.example.fullstack.database.service.UserService;
 import com.example.fullstack.security.model.UserSecurity;
@@ -9,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,18 +20,17 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private final  UserRepository userRepository;
+    private final DeletedUserRepository deletedUserRepository;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, DeletedUserRepository deletedUserRepository ) {
         this.userRepository = userRepository;
+        this.deletedUserRepository = deletedUserRepository;
     }
 
 
     @Override
     public void createUser(User user) {
-
-
         userRepository.save(user);
-
     }
 
     @Override
@@ -49,6 +51,20 @@ public class UserServiceImpl implements UserService {
         }
         return null; // User is not authenticated
     }
+
+    @Override
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id).orElse(null);
+       if(user != null) {
+           DeletedUser deletedUser = new DeletedUser();
+           deletedUser.setPhone(user.getPhone());
+           deletedUser.setDeletedAt(LocalDateTime.now());
+
+           deletedUserRepository.save(deletedUser);
+           userRepository.delete(user);
+       }
+    }
+
     private User getUserFromUserSecurity(UserSecurity userSecurity) {
         // Convert UserSecurity to User
         return userRepository.findByEmail(userSecurity.getUsername())

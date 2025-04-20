@@ -9,7 +9,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
-import java.io.File;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -132,6 +132,20 @@ public class OrdersController {
             return ResponseEntity.badRequest().body("Error during place order: " + e.getMessage());
         }
 
+
+    }
+
+    @GetMapping("/history/all-orders/{id}")
+    public ResponseEntity<?> getOrderHistoryUser(@PathVariable Long id) {
+        try {
+            List<Orders> orderHistory = ordersServiceImpl.getOrdersByUser(id);
+            List<OrderDTO> dto = orderHistory.stream()
+                    .map(orderDTOServiceImpl::convertToDTO)
+                    .toList();
+            return ResponseEntity.ok(dto);
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body("Error during getOrderHistory: " + e.getMessage());
+        }
 
     }
 
