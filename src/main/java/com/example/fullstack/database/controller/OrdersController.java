@@ -53,9 +53,11 @@ public class OrdersController {
             Status newStatus = Status.valueOf(status.toUpperCase());
             ordersServiceImpl.updateOrderStatus(id, newStatus);
             String statusMessage = getStatusMessage(newStatus);
+            System.out.println("Sending to /topic/orders/" + id + ": " + statusMessage);
             messagingTemplate.convertAndSend("/topic/orders/" + id, statusMessage);
 
             if (newStatus == Status.PLACED) {
+                System.out.println("Sending to /topic/admin: New order with ID: " + id);
                 messagingTemplate.convertAndSend("/topic/admin", "New order with ID: " + id);
             }
             if (newStatus == Status.DELIVERED) {
