@@ -24,6 +24,7 @@ public class Orders {
     @Id
     @Column(length = 36)
     private String orderId;
+    private Long orderSequence;
     private BigDecimal totalPrice;
     @Enumerated(EnumType.STRING)
     private Status status;
@@ -60,6 +61,19 @@ public class Orders {
             }
         }
         return total;
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    @Transient
+    public String getFormattedOrderNumber() {
+        if (orderSequence== null) {
+            return null;
+        }
+        return "#Order-" + String.format("%04d", orderSequence);
     }
 
 }

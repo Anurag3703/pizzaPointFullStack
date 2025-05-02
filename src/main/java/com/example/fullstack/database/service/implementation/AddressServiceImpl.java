@@ -108,4 +108,30 @@ public class AddressServiceImpl implements AddressService {
     public Address getAddressById(Long id) {
         return addressRepository.findById(id).orElse(null);
     }
+
+    @Override
+    @Transactional
+    public void setAddressAsSelected(Long addressId) {
+        User currentUser = userService.getCurrentUser();
+        Address addressToSelect = addressRepository.findById(addressId)
+                .orElseThrow(() -> new RuntimeException("Address not found"));
+
+        if (!addressToSelect.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Address does not belong to current user");
+        }
+
+        // Unselect all addresses for this user
+        List<Address> userAddresses = addressRepository.findByUser(currentUser);
+        for (Address addr : userAddresses) {
+            if (addr.isSelected()) {
+                addr.setSelected(false);
+            }
+        }
+        addressRepository.saveAll(userAddresses);
+
+        // set
+        addressToSelect.setSelected(true);
+        addressRepository.save(addressToSelect);
+
+    }
 }

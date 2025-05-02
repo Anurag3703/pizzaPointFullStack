@@ -13,4 +13,5 @@ public interface AddressService {
     void addAddress(Address address);
     Address getAddressByUserAndIsSelected(User user, boolean isSelected);
     Address getAddressById(Long id);
+    void setAddressAsSelected(Long addressId);
 }

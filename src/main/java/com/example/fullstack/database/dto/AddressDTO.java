@@ -3,6 +3,8 @@ package com.example.fullstack.database.dto;
 
 import lombok.Data;
 
+import java.util.Optional;
+
 @Data
 public class AddressDTO {
     private Long addressId;
@@ -15,4 +17,6 @@ public class AddressDTO {
     private boolean selected;
     private boolean recent;
     private Long userId;
+
+
 }

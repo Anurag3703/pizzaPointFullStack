@@ -15,6 +15,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OrderDTO {
     private String orderId;
+    private String orderSequence;
     private BigDecimal totalPrice;
     private Status status;
     private LocalDate date;

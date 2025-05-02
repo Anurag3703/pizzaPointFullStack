@@ -18,6 +18,7 @@ public class AddressDTOServiceImpl implements AddressDTOService {
         addressDTO.setSelected(address.isSelected());
         addressDTO.setIntercom(address.getIntercom());
         addressDTO.setRecent(address.isRecent());
+        addressDTO.setBuildingName(address.getBuildingName());
         addressDTO.setUserId(address.getUser().getId());
 
         // Return the mapped DTO
