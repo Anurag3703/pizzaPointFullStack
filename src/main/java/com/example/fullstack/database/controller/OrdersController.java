@@ -137,10 +137,10 @@ public class OrdersController {
 
     }
 
-    @GetMapping("/history/all-orders/{id}")
-    public ResponseEntity<?> getOrderHistoryUser(@PathVariable Long id) {
+    @GetMapping("/history/all-orders/{email}")
+    public ResponseEntity<?> getOrderHistoryUser(@PathVariable String email) {
         try {
-            List<Orders> orderHistory = ordersServiceImpl.getOrdersByUser(id);
+            List<Orders> orderHistory = ordersServiceImpl.getOrdersByUser(email);
             List<OrderDTO> dto = orderHistory.stream()
                     .map(orderDTOServiceImpl::convertToDTO)
                     .toList();

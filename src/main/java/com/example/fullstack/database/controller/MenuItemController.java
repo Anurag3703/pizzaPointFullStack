@@ -4,6 +4,7 @@
     import com.example.fullstack.database.model.MenuItemCategory;
     import com.example.fullstack.database.model.Size;
     import com.example.fullstack.database.service.implementation.MenuItemServiceImpl;
+    import org.springframework.http.ResponseEntity;
     import org.springframework.security.access.prepost.PreAuthorize;
     import org.springframework.web.bind.annotation.*;
 
@@ -24,12 +25,21 @@
             menuItemServiceImpl.addMenuItem(menuItem);
             return "Success";
         }
+
         @GetMapping("/get/{id}")
         public MenuItem getMenuItemById(@PathVariable String id) {
             return menuItemServiceImpl.getMenuItemById(id) .orElseThrow(() -> new RuntimeException("MenuItem not found with ID: " + id));
         }
 
-
+        @PutMapping ("/update/{menuItemId}")
+        public ResponseEntity<?> updateMenuItem(@PathVariable String menuItemId, @RequestBody MenuItem menuItem) {
+            try{
+                menuItemServiceImpl.updateMenuItem(menuItemId, menuItem);
+                return ResponseEntity.ok("Menuitem with id " + menuItemId + " updated successfully");
+            }catch (RuntimeException e){
+                return ResponseEntity.ok("Menuitem with id " + menuItemId + " update failed");
+            }
+        }
 
         @PostMapping("/add-all")
         public String addMenuItems(@RequestBody List<MenuItem> menuItems) {

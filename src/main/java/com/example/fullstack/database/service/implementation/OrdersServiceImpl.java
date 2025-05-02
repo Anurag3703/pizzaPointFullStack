@@ -1,5 +1,6 @@
 package com.example.fullstack.database.service.implementation;
 
+import com.example.fullstack.config.OrderSequenceUtil;
 import com.example.fullstack.database.model.*;
 import com.example.fullstack.database.repository.*;
 import com.example.fullstack.database.service.OrdersService;
@@ -14,8 +15,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class OrdersServiceImpl implements OrdersService {
@@ -26,6 +26,7 @@ public class OrdersServiceImpl implements OrdersService {
      OrdersRepository ordersRepository;
      private final UserRepository userRepository;
      private final AddressRepository addressRepository;
+     private OrderSequenceUtil orderSequenceUtil;
 
 
 
@@ -33,24 +34,35 @@ public class OrdersServiceImpl implements OrdersService {
             , CartRepository cartRepository
             , MenuItemRepository menuItemRepository
             , UserRepository userRepository
-            , AddressRepository addressRepository) {
+            , AddressRepository addressRepository
+            , OrderSequenceUtil orderSequenceUtil) {
         this.ordersRepository = ordersRepository;
         this.orderItemRepository = orderItemRepository;
         this.cartRepository = cartRepository;
         this.menuItemRepository = menuItemRepository;
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
+        this.orderSequenceUtil = orderSequenceUtil;
+
     }
 
 
 
     @Override
     public void addOrder(Orders order) {
+        if (order.getOrderSequence() == null) {
+            order.setOrderSequence(orderSequenceUtil.getNextOrderSequence());
+        }
         ordersRepository.save(order);
     }
 
     @Override
     public List<Orders> addAllOrders(List<Orders> orders) {
+        for (Orders order : orders) {
+            if (order.getOrderSequence() == null) {
+                order.setOrderSequence(orderSequenceUtil.getNextOrderSequence());
+            }
+        }
         return ordersRepository.saveAll(orders);
     }
 
@@ -121,11 +133,27 @@ public class OrdersServiceImpl implements OrdersService {
 
     @Override
     public List<Orders> getAllOrders() {
+//        List<Orders> orders = ordersRepository.findAll();
+//        Map<Status, Integer> statusPriority = new HashMap<>();
+//
+//        statusPriority.put(Status.PREPARING, 1);
+//        statusPriority.put(Status.READY_FOR_PICKUP, 2);
+//        statusPriority.put(Status.PLACED, 3);
+//        statusPriority.put(Status.PENDING, 4);
+//        statusPriority.put(Status.OUT_FOR_DELIVERY, 5);
+//        statusPriority.put(Status.FAILED, 6);
+//        statusPriority.put(Status.CANCELLED, 7);
+//        statusPriority.put(Status.COMPLETED, 8);
+//        statusPriority.put(Status.DELIVERED, 9);
+//
+//        // Sort orders based on status priority
+//        orders.sort(Comparator.comparing(order ->
+//                statusPriority.getOrDefault(order.getStatus(), Integer.MAX_VALUE)));
         return ordersRepository.findAll();
     }
 
     @Override
-    public List<Orders> getOrdersByUser(Long userId) {
+    public List<Orders> getOrdersByUser(String email) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!(principal instanceof UserSecurity)) {
             throw new RuntimeException("User must be logged in to checkout");
@@ -135,15 +163,12 @@ public class OrdersServiceImpl implements OrdersService {
         UserSecurity userSecurity = (UserSecurity) principal;
         User user = getUserFromUserSecurity(userSecurity);
 
-        try {
-             List<Orders> order = ordersRepository.findByUserId(userId);
-             if(order.isEmpty()) {
-                 throw new RuntimeException("Customer Has no orders");
-             }else {
-                 return order;
-             }
-        }catch (RuntimeException e) {
-            throw e;
+
+        List<Orders> order = ordersRepository.findByUserEmail(email);
+        if(order.isEmpty()) {
+            throw new RuntimeException("Customer Has no orders");
+        }else {
+            return order;
         }
     }
 
@@ -239,6 +264,8 @@ public class OrdersServiceImpl implements OrdersService {
         if (orderType == null) {
             throw new RuntimeException("Order type is required");
         }
+
+        order.setOrderSequence(orderSequenceUtil.getNextOrderSequence());
 
         order.setPaymentMethod(paymentMethod);
         order.setOrderType(orderType);

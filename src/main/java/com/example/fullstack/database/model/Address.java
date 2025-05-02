@@ -30,4 +30,9 @@ public class Address {
     private User user;
     private LocalDateTime createdDateTime;
 
+    @PrePersist
+    protected void onCreate() {
+        createdDateTime = LocalDateTime.now();
+    }
+
 }

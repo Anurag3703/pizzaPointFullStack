@@ -14,6 +14,7 @@ public class OrderDTOServiceImpl implements OrderDTOService {
         OrderDTO dto = new OrderDTO();
         dto.setOrderId(order.getOrderId());
         dto.setTotalPrice(order.getTotalPrice());
+        dto.setOrderSequence(order.getFormattedOrderNumber());
         dto.setStatus(order.getStatus());
         dto.setCreatedAt(order.getCreatedAt());
         dto.setUpdatedAt(order.getUpdatedAt());
