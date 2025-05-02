@@ -153,7 +153,7 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    public List<Orders> getOrdersByUser(Long userId) {
+    public List<Orders> getOrdersByUser(String email) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!(principal instanceof UserSecurity)) {
             throw new RuntimeException("User must be logged in to checkout");
@@ -163,15 +163,12 @@ public class OrdersServiceImpl implements OrdersService {
         UserSecurity userSecurity = (UserSecurity) principal;
         User user = getUserFromUserSecurity(userSecurity);
 
-        try {
-             List<Orders> order = ordersRepository.findByUserId(userId);
-             if(order.isEmpty()) {
-                 throw new RuntimeException("Customer Has no orders");
-             }else {
-                 return order;
-             }
-        }catch (RuntimeException e) {
-            throw e;
+
+        List<Orders> order = ordersRepository.findByUserEmail(email);
+        if(order.isEmpty()) {
+            throw new RuntimeException("Customer Has no orders");
+        }else {
+            return order;
         }
     }
 
