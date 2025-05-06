@@ -235,6 +235,7 @@
             pendingOrder.setOrderType(orderType);
             pendingOrder.setOrderSequence(orderSequenceUtil.getNextOrderSequence());
             pendingOrder.setStatus(paymentMethod == PaymentMethod.CASH ? Status.PLACED : Status.PENDING);
+            pendingOrder.setTotalPrice(pendingOrder.getTotalPrice());
             pendingOrder.setUpdatedAt(LocalDateTime.now());
 
             Orders confirmedOrder = ordersRepository.save(pendingOrder);
