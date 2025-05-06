@@ -15,13 +15,13 @@ public interface OrdersService {
     List<Orders> addAllOrders(List<Orders> orders);
     void updateOrder(Orders order);
     void updateOrderStatus(String orderId, Status status);
-    Orders  processCheckout(HttpSession session);
+    Orders  processCheckout();
     List<Orders> getAllOrders();
     List<Orders> getOrdersByUser(String userId);
 
 
     Orders  getOrderById(String orderId);
-    Orders confirmCheckout(PaymentMethod paymentMethod, OrderType orderType,HttpSession session);
-
+    Orders confirmCheckout(String orderId, PaymentMethod paymentMethod, OrderType orderType);
+    void deletePendingOrders();
 
 }

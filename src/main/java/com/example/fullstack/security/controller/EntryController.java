@@ -2,6 +2,7 @@ package com.example.fullstack.security.controller;
 
 
 import com.example.fullstack.database.model.User;
+import com.example.fullstack.database.repository.DeletedUserRepository;
 import com.example.fullstack.database.repository.UserRepository;
 import com.example.fullstack.database.service.implementation.CartServiceImpl;
 import com.example.fullstack.security.model.AuthRequest;
@@ -34,15 +35,17 @@ public class EntryController {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final CartServiceImpl cartServiceImpl;
+    private final DeletedUserRepository deletedUserRepository;
 
 
-    public EntryController(AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil, SecurityUserRepository securityUserRepository, PasswordEncoder passwordEncoder, UserRepository userRepository, CartServiceImpl cartServiceImpl) {
+    public EntryController(AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil, SecurityUserRepository securityUserRepository, PasswordEncoder passwordEncoder, UserRepository userRepository, CartServiceImpl cartServiceImpl, DeletedUserRepository deletedUserRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenUtil = jwtTokenUtil;
         this.securityUserRepository = securityUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.userRepository= userRepository;
         this.cartServiceImpl = cartServiceImpl;
+        this.deletedUserRepository = deletedUserRepository;
 
     }
 
@@ -63,7 +66,7 @@ public class EntryController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody SignupRequest signupRequest,HttpSession session) {
+    public ResponseEntity<?> signup(@RequestBody SignupRequest signupRequest) {
         try {
 
 
@@ -75,7 +78,9 @@ public class EntryController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password must be at least 10 characters long, contain at least one uppercase letter, one special character, and match the confirmation password.");
             }
 
-
+//            if(!deletedUserRepository.findByPhone(signupRequest.getPhone()).isEmpty()) {
+//                return ResponseEntity.status(HttpStatus.CONFLICT).body("Phone Number is blocked");
+//            }
             // Create and save the UserSecurity
             UserSecurity userSecurity = new UserSecurity();
             userSecurity.setEmail(signupRequest.getEmail());
@@ -99,7 +104,7 @@ public class EntryController {
             userRepository.save(user);
 
             // Transfer guest cart to user cart
-            cartServiceImpl.transferGuestCartToUser(session, user);
+//            cartServiceImpl.transferGuestCartToUser(session, user);
 
             // Authenticate the user to generate the JWT token
             Authentication authentication = new UsernamePasswordAuthenticationToken(userSecurity.getEmail(), signupRequest.getPassword());
@@ -117,5 +122,30 @@ public class EntryController {
     public ResponseEntity<?> testAuth() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return ResponseEntity.ok("Authenticated User: " + authentication.getName());
+    }
+
+    @GetMapping("/valid-token")
+    public ResponseEntity<?> validateToken() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication != null && authentication.isAuthenticated()) {
+            return  ResponseEntity.ok("Authenticated User: " + authentication.getName());
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Token");
+    }
+
+    @GetMapping("/validate-token/{email}")
+    public ResponseEntity<?> validateTokenForUser(@PathVariable String email) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication != null && authentication.isAuthenticated()) {
+            Object principle = authentication.getPrincipal();
+            if(principle instanceof UserSecurity userSecurity){
+                if(userSecurity.getUser().getEmail().equals(email)){
+                    return  ResponseEntity.ok("Authenticated User: " + authentication.getName());
+                }else {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Token does not belong to this user");
+                }
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Token");
     }
 }

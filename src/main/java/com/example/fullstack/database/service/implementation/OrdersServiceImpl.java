@@ -1,295 +1,266 @@
-package com.example.fullstack.database.service.implementation;
+    package com.example.fullstack.database.service.implementation;
 
-import com.example.fullstack.config.OrderSequenceUtil;
-import com.example.fullstack.database.model.*;
-import com.example.fullstack.database.repository.*;
-import com.example.fullstack.database.service.OrdersService;
-import com.example.fullstack.security.model.UserSecurity;
-import jakarta.servlet.http.HttpSession;
-import jakarta.transaction.Transactional;
-import org.aspectj.weaver.ast.Or;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
+    import com.example.fullstack.config.OrderSequenceUtil;
+    import com.example.fullstack.database.model.*;
+    import com.example.fullstack.database.repository.*;
+    import com.example.fullstack.database.service.OrdersService;
+    import com.example.fullstack.security.model.UserSecurity;
+    import jakarta.transaction.Transactional;
+    import org.springframework.security.core.Authentication;
+    import org.springframework.security.core.context.SecurityContextHolder;
+    import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.*;
+    import java.math.BigDecimal;
+    import java.time.LocalDate;
+    import java.time.LocalDateTime;
+    import java.util.*;
 
-@Service
-public class OrdersServiceImpl implements OrdersService {
+    @Service
+    public class OrdersServiceImpl implements OrdersService {
 
-    private final OrderItemRepository orderItemRepository;
-    private final CartRepository cartRepository;
-    private final MenuItemRepository menuItemRepository;
-     OrdersRepository ordersRepository;
-     private final UserRepository userRepository;
-     private final AddressRepository addressRepository;
-     private OrderSequenceUtil orderSequenceUtil;
+        private final CartRepository cartRepository;
+        private final OrderItemRepository orderItemRepository;
+       private final  OrdersRepository ordersRepository;
+         private final UserRepository userRepository;
+         private final AddressRepository addressRepository;
+         private final OrderSequenceUtil orderSequenceUtil;
 
 
 
-    public OrdersServiceImpl(OrdersRepository ordersRepository, OrderItemRepository orderItemRepository
-            , CartRepository cartRepository
-            , MenuItemRepository menuItemRepository
-            , UserRepository userRepository
-            , AddressRepository addressRepository
-            , OrderSequenceUtil orderSequenceUtil) {
-        this.ordersRepository = ordersRepository;
-        this.orderItemRepository = orderItemRepository;
-        this.cartRepository = cartRepository;
-        this.menuItemRepository = menuItemRepository;
-        this.userRepository = userRepository;
-        this.addressRepository = addressRepository;
-        this.orderSequenceUtil = orderSequenceUtil;
-
-    }
-
-
-
-    @Override
-    public void addOrder(Orders order) {
-        if (order.getOrderSequence() == null) {
-            order.setOrderSequence(orderSequenceUtil.getNextOrderSequence());
+        public OrdersServiceImpl(OrdersRepository ordersRepository, OrderItemRepository orderItemRepository
+                , CartRepository cartRepository
+                , MenuItemRepository menuItemRepository
+                , UserRepository userRepository
+                , AddressRepository addressRepository
+                , OrderSequenceUtil orderSequenceUtil) {
+            this.ordersRepository = ordersRepository;
+            this.cartRepository = cartRepository;
+            this.userRepository = userRepository;
+            this.addressRepository = addressRepository;
+            this.orderSequenceUtil = orderSequenceUtil;
+            this.orderItemRepository = orderItemRepository;
         }
-        ordersRepository.save(order);
-    }
 
-    @Override
-    public List<Orders> addAllOrders(List<Orders> orders) {
-        for (Orders order : orders) {
+
+
+        @Override
+        public void addOrder(Orders order) {
             if (order.getOrderSequence() == null) {
                 order.setOrderSequence(orderSequenceUtil.getNextOrderSequence());
             }
-        }
-        return ordersRepository.saveAll(orders);
-    }
-
-    @Override
-    public void updateOrder(Orders order) {
-        ordersRepository.save(order);
-    }
-
-    @Override
-    public void updateOrderStatus(String orderId, Status status) {
-        Orders order = ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found" + orderId));
-
-        order.setStatus(status);
-        ordersRepository.save(order);
-    }
-
-
-
-
-    @Override
-    @Transactional
-    public Orders processCheckout(HttpSession session) {
-        // Retrieve the current user
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!(principal instanceof UserSecurity)) {
-            throw new RuntimeException("User must be logged in to checkout");
+            ordersRepository.save(order);
         }
 
-        // Convert UserSecurity to User
-        UserSecurity userSecurity = (UserSecurity) principal;
-        User user = getUserFromUserSecurity(userSecurity);
-
-        // Retrieve the user's cart
-        Cart cart = cartRepository.findByUser(user).stream()
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("No cart found for the user"));
-
-        if (cart.getCartItems().isEmpty()) {
-            throw new RuntimeException("No items in the cart to checkout");
+        @Override
+        public List<Orders> addAllOrders(List<Orders> orders) {
+            for (Orders order : orders) {
+                if (order.getOrderSequence() == null) {
+                    order.setOrderSequence(orderSequenceUtil.getNextOrderSequence());
+                }
+            }
+            return ordersRepository.saveAll(orders);
         }
 
-        // Calculate the total price of the cart
-        BigDecimal totalPrice = cart.getCartItems().stream()
-                .map(CartItem::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        // Create a new order
-        Orders order = new Orders();
-        order.setUser(user);
-        order.setCreatedAt(LocalDateTime.now());
-        order.setUpdatedAt(LocalDateTime.now());
-        order.setTotalPrice(totalPrice);
-        order.setDate(LocalDate.now());
-
-        List<OrderItem> orderItems = new ArrayList<>();
-        for (CartItem cartItem : cart.getCartItems()) {
-            OrderItem orderItem = createOrderItemFromCart(cartItem, order, session); // Pass the session
-            orderItems.add(orderItem);
-        }
-        order.setOrderItems(orderItems);
-        session.setAttribute("pendingOrder", order);
-
-        // Clear the cart
-        //cartRepository.deleteByUser(user);
-
-        return order;
-    }
-
-    @Override
-    public List<Orders> getAllOrders() {
-//        List<Orders> orders = ordersRepository.findAll();
-//        Map<Status, Integer> statusPriority = new HashMap<>();
-//
-//        statusPriority.put(Status.PREPARING, 1);
-//        statusPriority.put(Status.READY_FOR_PICKUP, 2);
-//        statusPriority.put(Status.PLACED, 3);
-//        statusPriority.put(Status.PENDING, 4);
-//        statusPriority.put(Status.OUT_FOR_DELIVERY, 5);
-//        statusPriority.put(Status.FAILED, 6);
-//        statusPriority.put(Status.CANCELLED, 7);
-//        statusPriority.put(Status.COMPLETED, 8);
-//        statusPriority.put(Status.DELIVERED, 9);
-//
-//        // Sort orders based on status priority
-//        orders.sort(Comparator.comparing(order ->
-//                statusPriority.getOrDefault(order.getStatus(), Integer.MAX_VALUE)));
-        return ordersRepository.findAll();
-    }
-
-    @Override
-    public List<Orders> getOrdersByUser(String email) {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!(principal instanceof UserSecurity)) {
-            throw new RuntimeException("User must be logged in to checkout");
+        @Override
+        public void updateOrder(Orders order) {
+            ordersRepository.save(order);
         }
 
-        // Convert UserSecurity to User
-        UserSecurity userSecurity = (UserSecurity) principal;
-        User user = getUserFromUserSecurity(userSecurity);
+        @Override
+        public void updateOrderStatus(String orderId, Status status) {
+            Orders order = ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found" + orderId));
 
-
-        List<Orders> order = ordersRepository.findByUserEmail(email);
-        if(order.isEmpty()) {
-            throw new RuntimeException("Customer Has no orders");
-        }else {
-            return order;
-        }
-    }
-
-    private OrderItem createOrderItemFromCart(CartItem cartItem, Orders order, HttpSession session) {
-        OrderItem orderItem = new OrderItem();
-        orderItem.setMenuItem(cartItem.getMenuItem());
-        orderItem.setQuantity(cartItem.getQuantity());
-        orderItem.setPricePerItem(cartItem.getTotalPrice());
-        orderItem.setOrder(order);  // Associate with the order
-        if(cartItem.getExtras() != null && !cartItem.getExtras().isEmpty()) {
-            orderItem.setExtras(new ArrayList<>(cartItem.getExtras()));
-        }
-        List<OrderItem> sessionOrderItems = (List<OrderItem>) session.getAttribute("orderItems");
-        if(sessionOrderItems == null) {
-            sessionOrderItems = new ArrayList<>();
+            order.setStatus(status);
+            ordersRepository.save(order);
         }
 
-        sessionOrderItems.add(orderItem);
-        session.setAttribute("orderItems", sessionOrderItems);
-        return orderItem;
-    }
+        @Override
+        @Transactional
+        public Orders processCheckout() {
+            // Get user from JWT token
+            UserSecurity userSecurity = (UserSecurity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            User user = getUserFromUserSecurity(userSecurity);
 
-    @Override
-    public Orders getOrderById(String orderId) {
-        return ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found" + orderId));
-    }
+            // Retrieve the user's cart
+            Cart cart = cartRepository.findByUser(user).stream()
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("No cart found for the user"));
 
+            if (cart.getCartItems().isEmpty()) {
+                throw new RuntimeException("No items in the cart to checkout");
+            }
 
+            // Look for existing draft order
+            Optional<Orders> existingOrder = ordersRepository.findTopByUserAndStatusOrderByCreatedAtDesc(user, Status.PENDING);
+            Orders order;
 
-    public User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            return (User) authentication.getPrincipal(); // Assuming UserDetails is being used
-        }
-        throw new RuntimeException("No authenticated user found");
-    }
+            if (existingOrder.isPresent()) {
+                order = existingOrder.get();
+                order.getOrderItems().clear(); // Clear old items (thanks to orphanRemoval)
+            } else {
+                order = new Orders();
+                order.setUser(user);
+                order.setStatus(Status.PENDING);
+                order.setCreatedAt(LocalDateTime.now());
+                order.setDate(LocalDate.now());
+            }
 
-    private BigDecimal calculateTotalPrice(List<OrderItem> orderItems) {
-        return orderItems.stream()
-                .map(item -> item.getPricePerItem().multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
+            order.setUpdatedAt(LocalDateTime.now());
 
-    private User getUserFromUserSecurity(UserSecurity userSecurity) {
-        // Assuming UserSecurity has a method to get the user ID or username
-        return userRepository.findByEmail(userSecurity.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+            // Reconstruct
+            List<OrderItem> newOrderItems = new ArrayList<>();
+            for (CartItem cartItem : cart.getCartItems()) {
+                OrderItem orderItem = createOrderItemFromCart(cartItem, order);
+                newOrderItems.add(orderItem);
+            }
 
-        // Alternative if using username instead of ID
-        // return userRepository.findByUsername(userSecurity.getUsername())
-        //        .orElseThrow(() -> new RuntimeException("User not found"));
-    }
-
-
-    @Override
-    @Transactional
-    public Orders confirmCheckout(PaymentMethod paymentMethod,  OrderType orderType, HttpSession session) {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!(principal instanceof UserSecurity)) {
-            throw new RuntimeException("User must be logged in to confirm checkout");
-        }
-
-        // Convert UserSecurity to User
-        UserSecurity userSecurity = (UserSecurity) principal;
-        User currentUser = getUserFromUserSecurity(userSecurity);
-
-        Orders order = (Orders) session.getAttribute("pendingOrder");
-        if(order == null) {
-            throw new RuntimeException("No pending order found in your session");
+            order.getOrderItems().addAll(newOrderItems);
+            order.setTotalPrice(cart.getTotalPrice()); // Recalculate total
+    //        order.updateItemsFromCart(cart.getCartItems());
+            return ordersRepository.save(order);
         }
 
-        if (!order.getUser().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("Unauthorized: This order does not belong to the current user");
-        }
-
-        List<OrderItem> orderItems = (List<OrderItem>) session.getAttribute("orderItems");
-        if(orderItems == null || orderItems.isEmpty()) {
-            throw new RuntimeException("No order items found in your session");
-        }
-
-        Address selectedAddress = addressRepository.findByUserAndSelected(currentUser, true);
-        if (selectedAddress == null) {
-            throw new RuntimeException("No selected address found for the current user");
-        }
-
-        order.setAddress(selectedAddress);
-
-        if (paymentMethod == null) {
-            throw new RuntimeException("Payment method is required");
-        }
-
-
-        if (orderType == null) {
-            throw new RuntimeException("Order type is required");
-        }
-
-        order.setOrderSequence(orderSequenceUtil.getNextOrderSequence());
-
-        order.setPaymentMethod(paymentMethod);
-        order.setOrderType(orderType);
-
-        if (paymentMethod == PaymentMethod.CASH) {
-            order.setStatus(Status.PLACED);
-        } else {
-            order.setStatus(Status.PENDING);
-        }
-        ordersRepository.save(order);
-
-        for(OrderItem orderItem : orderItems) {
+        private OrderItem createOrderItemFromCart(CartItem cartItem, Orders order) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setMenuItem(cartItem.getMenuItem());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setPricePerItem(cartItem.getTotalPrice());
             orderItem.setOrder(order);
-            orderItemRepository.save(orderItem);
+
+            if(cartItem.getExtras() != null && !cartItem.getExtras().isEmpty()) {
+                orderItem.setExtras(new ArrayList<>(cartItem.getExtras()));
+            }
+
+            return orderItem;
+        }
+    //    public void updateItemsFromCart(List<CartItem> cartItems) {
+    //        this.orderItems.clear();  // remove old items and trigger orphanRemoval
+    //
+    //        for (CartItem cartItem : cartItems) {
+    //            OrderItem orderItem = new OrderItem();
+    //            orderItem.setOrder(this);
+    //            orderItem.setQuantity(cartItem.getQuantity());
+    //            orderItem.setPricePerItem(cartItem.getMenuItem().getPrice());
+    //            orderItem.setMenuItem(cartItem.getMenuItem());
+    //            orderItem.setExtras(new ArrayList<>(cartItem.getExtras())); // copy extras if needed
+    //            this.orderItems.add(orderItem);
+    //        }
+    //
+    //        // Optionally set total price here or let service do it
+    //        this.totalPrice = this.getTotalPrice();
+    //    }
+
+        @Override
+        public List<Orders> getAllOrders() {
+    //
+            return ordersRepository.findByStatusNotOrderByCreatedAtDesc(Status.PENDING);
         }
 
-        session.removeAttribute("orderItems");
-        session.removeAttribute("orderItems");
+        @Override
+        public List<Orders> getOrdersByUser(String email) {
+            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (!(principal instanceof UserSecurity)) {
+                throw new RuntimeException("User must be logged in to checkout");
+            }
 
-        cartRepository.deleteByUser(currentUser);
+            // Convert UserSecurity to User
+            UserSecurity userSecurity = (UserSecurity) principal;
+            User user = getUserFromUserSecurity(userSecurity);
+            List<Orders> order = ordersRepository.findByUserEmailAndStatusNot(email, Status.PENDING);
 
-        return order;
+            if(order.isEmpty()) {
+                throw new RuntimeException("Customer Has no orders");
+            }else {
+                return order;
+            }
+        }
 
+
+
+        @Override
+        public Orders getOrderById(String orderId) {
+            return ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found" + orderId));
+        }
+
+
+        public User getCurrentUser() {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null) {
+                return (User) authentication.getPrincipal(); // Assuming UserDetails is being used
+            }
+            throw new RuntimeException("No authenticated user found");
+        }
+
+        private BigDecimal calculateTotalPrice(List<OrderItem> orderItems) {
+            return orderItems.stream()
+                    .map(item -> item.getPricePerItem().multiply(BigDecimal.valueOf(item.getQuantity())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+
+        private User getUserFromUserSecurity(UserSecurity userSecurity) {
+            // Assuming UserSecurity has a method to get the user ID or username
+            return userRepository.findByEmail(userSecurity.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Alternative if using username instead of ID
+            // return userRepository.findByUsername(userSecurity.getUsername())
+            //        .orElseThrow(() -> new RuntimeException("User not found"));
+        }
+
+
+        @Override
+        @Transactional
+        public Orders confirmCheckout(String orderId,PaymentMethod paymentMethod,  OrderType orderType) {
+            UserSecurity userSecurity = (UserSecurity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            User currentUser = getUserFromUserSecurity(userSecurity);
+
+            Orders pendingOrder = ordersRepository.findById(orderId)
+                    .orElseThrow(() -> new RuntimeException("Order not found"));
+
+            if (!pendingOrder.getUser().getId().equals(currentUser.getId())) {
+                throw new RuntimeException("Unauthorized: This order does not belong to the current user");
+            }
+
+            if (pendingOrder.getStatus() == Status.PLACED) {
+                throw new RuntimeException("This order has already been Placed");
+            }
+
+            Address selectedAddress = addressRepository.findByUserAndSelected(currentUser, true);
+            if (selectedAddress == null) {
+                throw new RuntimeException("No selected address found for the current user");
+            }
+
+            pendingOrder.setAddress(selectedAddress);
+            pendingOrder.setPaymentMethod(paymentMethod);
+            pendingOrder.setOrderType(orderType);
+            pendingOrder.setOrderSequence(orderSequenceUtil.getNextOrderSequence());
+            pendingOrder.setStatus(paymentMethod == PaymentMethod.CASH ? Status.PLACED : Status.PENDING);
+            pendingOrder.setUpdatedAt(LocalDateTime.now());
+
+            Orders confirmedOrder = ordersRepository.save(pendingOrder);
+
+            // Clear the cart only after confirmation
+            if(cartRepository.existsByUser(currentUser)) {
+                cartRepository.deleteByUser(currentUser);
+            }
+            return confirmedOrder;
+        }
+
+        @Override
+        public void deletePendingOrders() {
+            List<Orders> pendingOrders  = ordersRepository.findByStatus(Status.PENDING);
+
+            if(pendingOrders.isEmpty()) {
+                throw new RuntimeException("No pending orders found");
+            }
+
+            for(Orders order : pendingOrders) {
+                for(OrderItem orderItem : order.getOrderItems()) {
+                    orderItemRepository.delete(orderItem);
+                }
+            }
+            ordersRepository.deleteAll(pendingOrders);
+
+        }
 
     }
-
-}

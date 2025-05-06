@@ -78,10 +78,10 @@ public class OrdersController {
 
 
     @PostMapping("/checkout")
-    public ResponseEntity<?> checkout(HttpSession session) {
+    public ResponseEntity<?> checkout() {
         try {
             // Call the service to process the checkout
-            Orders order = ordersServiceImpl.processCheckout(session);
+            Orders order = ordersServiceImpl.processCheckout();
             OrderDTO orderDTO = orderDTOServiceImpl.convertToDTO(order);
 
 
@@ -116,12 +116,15 @@ public class OrdersController {
     }
 
     @PostMapping("/placeorder")
-    public ResponseEntity<?> placeOrder(@RequestParam PaymentMethod paymentMethod,
+    public ResponseEntity<?> placeOrder(@RequestParam String orderId ,
+                                        @RequestParam PaymentMethod paymentMethod,
                                         @RequestParam OrderType orderType,
                                          HttpSession session) {
 
         try {
-            Orders order = ordersServiceImpl.confirmCheckout(paymentMethod, orderType,session);
+
+
+            Orders order = ordersServiceImpl.confirmCheckout(orderId,paymentMethod, orderType);
             OrderDTO responseDTO = orderDTOServiceImpl.convertToDTO(order);
             messagingTemplate.convertAndSend("/topic/orders/" + order.getOrderId(), "Your order has been placed");
             messagingTemplate.convertAndSend("/topic/admin", "New order received: " + order.getOrderId());
@@ -151,6 +154,16 @@ public class OrdersController {
 
     }
 
+
+    @DeleteMapping("/delete-pending-orders")
+    public ResponseEntity<?> deletePendingOrders() {
+        try{
+            ordersServiceImpl.deletePendingOrders();
+            return ResponseEntity.ok("Pending orders deleted successfully");
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body("Error during deletePendingOrders: " + e.getMessage());
+        }
+    }
 
 }
 

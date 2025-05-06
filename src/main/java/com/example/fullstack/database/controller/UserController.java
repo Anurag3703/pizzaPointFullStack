@@ -37,10 +37,15 @@ public class UserController {
         return userServiceImpl.addAllUsers(users);
     }
 
-    @PostMapping("/delete/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        userServiceImpl.deleteUser(id);
-        return ResponseEntity.ok("Deleted User: " + id);
+    @PostMapping("/delete/{email}")
+    public ResponseEntity<?> deleteUser(@PathVariable String email) {
+        try{
+            userServiceImpl.deleteUser(email);
+            return ResponseEntity.ok("Deleted User: " + email);
+        }catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
     }
 
 

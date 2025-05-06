@@ -51,6 +51,7 @@ public class AdminInitializer  implements CommandLineRunner {
             UserSecurity adminSecurity = new UserSecurity();
             adminSecurity.setEmail(email);
             adminSecurity.setPassword(passwordEncoder.encode(password));
+            adminSecurity.setPhone(phone);
             adminSecurity.setRole("ADMIN");
 
             User adminUser = new User();
