@@ -19,5 +19,8 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
 
     void deleteBySessionId(String sessionId);
 
+    boolean existsByUser(User user);
+
+
     // Optional<Cart> findByUser(User user);
 }

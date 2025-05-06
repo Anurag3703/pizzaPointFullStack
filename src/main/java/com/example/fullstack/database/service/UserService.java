@@ -12,7 +12,7 @@ public interface UserService {
     Optional<User> getUserById(Long id);
     List<User> addAllUsers(List<User> users);
     User getCurrentUser();
-    void deleteUser(Long id);
+    void deleteUser(String email);
 
 
 

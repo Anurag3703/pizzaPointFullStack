@@ -30,7 +30,7 @@ public class Orders {
     private Status status;
     private LocalDate date;
     @ManyToOne
-    @JoinColumn(name = "address_id", nullable = false)
+    @JoinColumn(name = "address_id", nullable = true)
     private Address address;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -12,6 +12,7 @@ import java.util.UUID;
 
 @Table(name = "users")
 @Entity
+@Data
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Getter
 @Setter
@@ -37,16 +38,18 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Review> reviews;
 
+    private boolean isAnonymous = false;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Address> addresses;
-
-    public User(String name, String address, String phone, String email) {
+    public User(String name, String address, String phone, String email,boolean isAnonymous) {
         this.name = name;
         this.address = address;
         this.phone = phone;
         this.email = email;
+        this.isAnonymous = isAnonymous;
 
     }
+
 
 
 }
