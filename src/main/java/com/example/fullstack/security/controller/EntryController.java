@@ -70,7 +70,6 @@ public class EntryController {
         try {
 
 
-
             if (securityUserRepository.existsByEmail(signupRequest.getEmail())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username already taken");
             }
