@@ -18,19 +18,28 @@ public class PaymentStripeService {
         Stripe.apiKey = stripeApiKey;
     }
 
-    public Payment createPaymentItent(Payment payment) throws StripeException {
+    public Payment createPaymentIntent(Payment payment) throws StripeException {
         long amountInHuf = (long) (payment.getAmount() *100);
 
         PaymentIntentCreateParams param = PaymentIntentCreateParams.builder()
                 .setAmount(amountInHuf)
                 .setCurrency(payment.getCurrency())
+                        .setAutomaticPaymentMethods(
+                                PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
+                                        .setEnabled(true)
+                                        .setAllowRedirects(PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER)
+                                        .build())
                 .build();
 
 
         PaymentIntent paymentIntent = PaymentIntent.create(param);
-
+        String clientSecret = paymentIntent.getClientSecret();
         payment.setPaymentIntentId(paymentIntent.getId());
-        payment.setStatus(payment.getStatus());
+        payment.setClientSecret(clientSecret);
+        payment.setCurrency(payment.getCurrency());
+        payment.setStatus(paymentIntent.getStatus());
+
+
         return payment;
 
     }
@@ -41,7 +50,7 @@ public class PaymentStripeService {
         payment.setPaymentIntentId(paymentIntent.getId());
         payment.setStatus(paymentIntent.getStatus());
         payment.setCurrency(paymentIntent.getCurrency());
-        payment.setAmount(paymentIntent.getAmountReceived()/100.0);
+        payment.setAmount(paymentIntent.getAmount()/100.0);
         return payment;
 
 

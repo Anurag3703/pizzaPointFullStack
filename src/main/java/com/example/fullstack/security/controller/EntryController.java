@@ -23,6 +23,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+import java.util.Optional;
+
 
 @RestController
 @RequestMapping("/auth")
@@ -35,7 +38,6 @@ public class EntryController {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final CartServiceImpl cartServiceImpl;
-    private final DeletedUserRepository deletedUserRepository;
 
 
     public EntryController(AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil, SecurityUserRepository securityUserRepository, PasswordEncoder passwordEncoder, UserRepository userRepository, CartServiceImpl cartServiceImpl, DeletedUserRepository deletedUserRepository) {
@@ -45,7 +47,6 @@ public class EntryController {
         this.passwordEncoder = passwordEncoder;
         this.userRepository= userRepository;
         this.cartServiceImpl = cartServiceImpl;
-        this.deletedUserRepository = deletedUserRepository;
 
     }
 
@@ -84,6 +85,7 @@ public class EntryController {
             UserSecurity userSecurity = new UserSecurity();
             userSecurity.setEmail(signupRequest.getEmail());
             userSecurity.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+            userSecurity.setPhone(signupRequest.getPhone());
             userSecurity.setRole("USER");
             UserSecurity savedUserSecurity = securityUserRepository.save(userSecurity);
 
@@ -135,16 +137,50 @@ public class EntryController {
     @GetMapping("/validate-token/{email}")
     public ResponseEntity<?> validateTokenForUser(@PathVariable String email) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication != null && authentication.isAuthenticated()) {
-            Object principle = authentication.getPrincipal();
-            if(principle instanceof UserSecurity userSecurity){
-                if(userSecurity.getUser().getEmail().equals(email)){
-                    return  ResponseEntity.ok("Authenticated User: " + authentication.getName());
-                }else {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Token does not belong to this user");
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            Object principal = authentication.getPrincipal();
+
+            if (principal instanceof UserSecurity userSecurity) {
+                // First, try to match directly on the UserSecurity email
+                if (userSecurity.getEmail() != null && userSecurity.getEmail().equals(email)) {
+                    return ResponseEntity.ok("Token is valid for user with email : " + authentication.getName());
                 }
+                // If I have a User object inside UserSecurity, checking that too
+                if (userSecurity.getUser() != null && userSecurity.getUser().getEmail() != null
+                        && userSecurity.getUser().getEmail().equals(email)) {
+                    return ResponseEntity.ok("Authenticated User: " + authentication.getName());
+                }
+                // If neither matches, return forbidden
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Token does not belong to this user");
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Unexpected principal type: " + (principal != null ? principal.getClass().getName() : "null"));
             }
         }
+
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Token");
     }
+
+
+    @GetMapping("/check-email")
+    public ResponseEntity<?> checkEmail(@RequestParam String email) {
+        boolean exists = securityUserRepository.existsByEmail(email);
+        return ResponseEntity.ok(Map.of("exists", exists));
+    }
+
+    @GetMapping("/check-email-password")
+    public ResponseEntity<?> checkEmailPassword(@RequestParam String email, @RequestParam String password) {
+        Optional<UserSecurity> optionalUser = securityUserRepository.findByEmail(email);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+        }
+        UserSecurity userSecurity = optionalUser.get();
+        if (!passwordEncoder.matches(password, userSecurity.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+        }
+        return ResponseEntity.ok("Email and password are valid");
+    }
+
 }

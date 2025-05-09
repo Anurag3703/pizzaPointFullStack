@@ -74,6 +74,8 @@
             ordersRepository.save(order);
         }
 
+
+        //Checkout with cart
         @Override
         @Transactional
         public Orders processCheckout() {
@@ -93,7 +95,6 @@
             // Look for existing draft order
             Optional<Orders> existingOrder = ordersRepository.findTopByUserAndStatusOrderByCreatedAtDesc(user, Status.PENDING);
             Orders order;
-
             if (existingOrder.isPresent()) {
                 order = existingOrder.get();
                 order.getOrderItems().clear(); // Clear old items (thanks to orphanRemoval)
@@ -103,8 +104,10 @@
                 order.setStatus(Status.PENDING);
                 order.setCreatedAt(LocalDateTime.now());
                 order.setDate(LocalDate.now());
+                order.setDeliveryFee(BigDecimal.valueOf(400));
             }
 
+            //Date and Time
             order.setUpdatedAt(LocalDateTime.now());
 
             // Reconstruct
@@ -114,9 +117,14 @@
                 newOrderItems.add(orderItem);
             }
 
+            //ADDS if more order items are added
             order.getOrderItems().addAll(newOrderItems);
-            order.setTotalPrice(cart.getTotalPrice()); // Recalculate total
-    //        order.updateItemsFromCart(cart.getCartItems());
+
+            //Calculates Total Bottle Deposit fee 0 if no bottles or 50*no of bottles
+            BigDecimal totalBottleDepositFee = order.getTotalBottleDepositFee();
+
+            order.setTotalPrice(calculateTotalPrice(newOrderItems,order.getDeliveryFee(),order.getServiceFee(),totalBottleDepositFee)); // Recalculate total
+    //      order.updateItemsFromCart(cart.getCartItems());
             return ordersRepository.save(order);
         }
 
@@ -124,35 +132,28 @@
             OrderItem orderItem = new OrderItem();
             orderItem.setMenuItem(cartItem.getMenuItem());
             orderItem.setQuantity(cartItem.getQuantity());
-            orderItem.setPricePerItem(cartItem.getTotalPrice());
-            orderItem.setOrder(order);
+            // Get the base price from menu item
+            BigDecimal basePrice = cartItem.getMenuItem().getPrice();
+            BigDecimal extrasPrice = BigDecimal.ZERO;
 
+            // Calculate extras price if any
             if(cartItem.getExtras() != null && !cartItem.getExtras().isEmpty()) {
                 orderItem.setExtras(new ArrayList<>(cartItem.getExtras()));
+                for(Extra extra : cartItem.getExtras()) {
+                    extrasPrice = extrasPrice.add(extra.getPrice());
+                }
             }
+
+            // Set the price per item (base + extras)
+            BigDecimal totalPricePerItem = basePrice.add(extrasPrice);
+            orderItem.setPricePerItem(totalPricePerItem);
+            orderItem.setOrder(order);
 
             return orderItem;
         }
-    //    public void updateItemsFromCart(List<CartItem> cartItems) {
-    //        this.orderItems.clear();  // remove old items and trigger orphanRemoval
-    //
-    //        for (CartItem cartItem : cartItems) {
-    //            OrderItem orderItem = new OrderItem();
-    //            orderItem.setOrder(this);
-    //            orderItem.setQuantity(cartItem.getQuantity());
-    //            orderItem.setPricePerItem(cartItem.getMenuItem().getPrice());
-    //            orderItem.setMenuItem(cartItem.getMenuItem());
-    //            orderItem.setExtras(new ArrayList<>(cartItem.getExtras())); // copy extras if needed
-    //            this.orderItems.add(orderItem);
-    //        }
-    //
-    //        // Optionally set total price here or let service do it
-    //        this.totalPrice = this.getTotalPrice();
-    //    }
 
         @Override
         public List<Orders> getAllOrders() {
-    //
             return ordersRepository.findByStatusNotOrderByCreatedAtDesc(Status.PENDING);
         }
 
@@ -176,35 +177,16 @@
         }
 
 
-
-        @Override
-        public Orders getOrderById(String orderId) {
-            return ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found" + orderId));
-        }
-
-
-        public User getCurrentUser() {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null) {
-                return (User) authentication.getPrincipal(); // Assuming UserDetails is being used
-            }
-            throw new RuntimeException("No authenticated user found");
-        }
-
-        private BigDecimal calculateTotalPrice(List<OrderItem> orderItems) {
-            return orderItems.stream()
+        private BigDecimal calculateTotalPrice(List<OrderItem> orderItems,BigDecimal deliveryFee, BigDecimal serviceFee,BigDecimal totalBottleDepositFee) {
+            //All the cart Items
+            BigDecimal itemsTotal = orderItems.stream()
                     .map(item -> item.getPricePerItem().multiply(BigDecimal.valueOf(item.getQuantity())))
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
-        }
 
-        private User getUserFromUserSecurity(UserSecurity userSecurity) {
-            // Assuming UserSecurity has a method to get the user ID or username
-            return userRepository.findByEmail(userSecurity.getUsername())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
-            // Alternative if using username instead of ID
-            // return userRepository.findByUsername(userSecurity.getUsername())
-            //        .orElseThrow(() -> new RuntimeException("User not found"));
+            //Total Order Payment . Food+Delivery+service+bottle deposit
+            return itemsTotal.add(deliveryFee)
+                    .add(serviceFee)
+                    .add(totalBottleDepositFee);
         }
 
 
@@ -235,8 +217,13 @@
             pendingOrder.setOrderType(orderType);
             pendingOrder.setOrderSequence(orderSequenceUtil.getNextOrderSequence());
             pendingOrder.setStatus(paymentMethod == PaymentMethod.CASH ? Status.PLACED : Status.PENDING);
+            pendingOrder.setDeliveryFee(BigDecimal.valueOf(400));
             pendingOrder.setTotalPrice(pendingOrder.getTotalPrice());
             pendingOrder.setUpdatedAt(LocalDateTime.now());
+            pendingOrder.setServiceFee(pendingOrder.getServiceFee());
+            pendingOrder.setBottleDepositFee(pendingOrder.getTotalBottleDepositFee());
+            pendingOrder.setTotalCartAmount(pendingOrder.getTotalCartAmount());
+
 
             Orders confirmedOrder = ordersRepository.save(pendingOrder);
 
@@ -263,5 +250,47 @@
             ordersRepository.deleteAll(pendingOrders);
 
         }
+
+        private User getUserFromUserSecurity(UserSecurity userSecurity) {
+            // Assuming UserSecurity has a method to get the user ID or username
+            return userRepository.findByEmail(userSecurity.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Alternative if using username instead of ID
+            // return userRepository.findByUsername(userSecurity.getUsername())
+            //        .orElseThrow(() -> new RuntimeException("User not found"));
+        }
+
+        public User getCurrentUser() {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null) {
+                return (User) authentication.getPrincipal(); // Assuming UserDetails is being used
+            }
+            throw new RuntimeException("No authenticated user found");
+        }
+
+        @Override
+        public Orders getOrderById(String orderId) {
+            return ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found" + orderId));
+        }
+
+
+
+//        public void updateItemsFromCart(List<CartItem> cartItems) {
+//            //        this.orderItems.clear();  // remove old items and trigger orphanRemoval
+//            //
+//            //        for (CartItem cartItem : cartItems) {
+//            //            OrderItem orderItem = new OrderItem();
+//            //            orderItem.setOrder(this);
+//            //            orderItem.setQuantity(cartItem.getQuantity());
+//            //            orderItem.setPricePerItem(cartItem.getMenuItem().getPrice());
+//            //            orderItem.setMenuItem(cartItem.getMenuItem());
+//            //            orderItem.setExtras(new ArrayList<>(cartItem.getExtras())); // copy extras if needed
+//            //            this.orderItems.add(orderItem);
+//            //        }
+//            //
+//            //        // Optionally set total price here or let service do it
+//            //        this.totalPrice = this.getTotalPrice();
+//            //    }
 
     }
