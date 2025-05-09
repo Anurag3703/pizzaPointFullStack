@@ -3,6 +3,7 @@ package com.example.fullstack.database.dto.service.implementation;
 import com.example.fullstack.database.dto.*;
 import com.example.fullstack.database.dto.service.OrderDTOService;
 import com.example.fullstack.database.model.Orders;
+import com.example.fullstack.database.service.implementation.OrdersServiceImpl;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +22,10 @@ public class OrderDTOServiceImpl implements OrderDTOService {
         dto.setDate(order.getDate());
         dto.setPaymentMethod(order.getPaymentMethod());
         dto.setOrderType(order.getOrderType());
+        dto.setDeliveryFee(order.getDeliveryFee());
+        dto.setServiceFee(order.getServiceFee());
+        dto.setBottleDepositFee(order.getTotalBottleDepositFee());
+        dto.setTotalCartAmount(order.getTotalCartAmount());
 
         List<OrderItemDTO> orderItemDTOList = order.getOrderItems().stream()
                 .map(item -> {

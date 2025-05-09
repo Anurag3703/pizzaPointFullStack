@@ -39,10 +39,7 @@ public class OrderItem {
 
 
     public BigDecimal getTotalPrice() {
-        BigDecimal extraPriceTotal = extras.stream()
-                .map(Extra::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return  pricePerItem.multiply(new BigDecimal(quantity)).add(extraPriceTotal);
+        return pricePerItem.multiply(new BigDecimal(quantity));
     }
 
 

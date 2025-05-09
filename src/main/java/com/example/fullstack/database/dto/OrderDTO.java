@@ -26,4 +26,8 @@ public class OrderDTO {
     private PaymentMethod paymentMethod;
     private List<OrderItemDTO> orderItems;
     private OrderType orderType;
+    private BigDecimal deliveryFee;
+    private BigDecimal serviceFee;
+    private BigDecimal bottleDepositFee;
+    private BigDecimal totalCartAmount;
 }

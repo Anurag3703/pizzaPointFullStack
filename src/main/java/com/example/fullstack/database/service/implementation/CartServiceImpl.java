@@ -175,12 +175,11 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public BigDecimal calculateCartTotalPrice(Cart cart) {
-        BigDecimal totalCartPrice = cart.getCartItems().stream()
+
+        // Fixed delivery fee
+        return cart.getCartItems().stream()
                 .map(CartItem::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal deliveryFee = BigDecimal.valueOf(400);  // Fixed delivery fee
-        return totalCartPrice.add(deliveryFee);
     }
 
 

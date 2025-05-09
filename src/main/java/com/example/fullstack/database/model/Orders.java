@@ -1,6 +1,5 @@
 package com.example.fullstack.database.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -39,12 +38,18 @@ public class Orders {
     private User user;
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
-
+    private BigDecimal deliveryFee;
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
+    private BigDecimal totalCartAmount;
 
     @Enumerated(EnumType.STRING)
     private OrderType orderType;
+
+    private BigDecimal serviceFee  = BigDecimal.valueOf(150);
+    private  BigDecimal bottleDepositFee  = BigDecimal.valueOf(50);
+
+
 
     @PrePersist
     public void generateId() {
@@ -52,16 +57,44 @@ public class Orders {
             orderId = UUID.randomUUID().toString();
         }
     }
-
-    public BigDecimal getTotalPrice() {
-        BigDecimal total = BigDecimal.ZERO;
-        if (orderItems != null) {
-            for (OrderItem item : orderItems) {
-                total = total.add(item.getTotalPrice());
-            }
-        }
-        return total;
+    public BigDecimal getPerBottleDepositFee() {
+        return bottleDepositFee;
     }
+
+
+    @Transient
+    public BigDecimal getTotalCartAmount() {
+        return orderItems.stream()
+                .map(item -> item.getPricePerItem().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    }
+    @Transient
+    public BigDecimal getTotalBottleDepositFee() {
+        long drinkItemCount = orderItems.stream()
+                .filter(item -> item.getMenuItem().getCategory() == MenuItemCategory.DRINKS)
+                .mapToLong(OrderItem::getQuantity)
+                .sum();
+
+        return bottleDepositFee.multiply(BigDecimal.valueOf(drinkItemCount));
+    }
+
+//    public BigDecimal getTotalPrice() {
+//        BigDecimal total = BigDecimal.ZERO;
+//        if (orderItems != null) {
+//            for (OrderItem item : orderItems) {
+//                total = total.add(item.getTotalPrice());
+//            }
+//        }
+//        if (deliveryFee != null) {
+//            total = total.add(deliveryFee);
+//        }
+//        total = total.add(serviceFee);
+//        total = total.add(bottleDepositFee);
+//        return total;
+//
+//
+//    }
 
     @PreUpdate
     public void preUpdate() {

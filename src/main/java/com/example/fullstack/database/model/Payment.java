@@ -9,11 +9,11 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Payment {
-    private String id;
     private String paymentIntentId;
     private Double amount;
     private String currency;
     private String status;
+    private String clientSecret;
 
 
 
