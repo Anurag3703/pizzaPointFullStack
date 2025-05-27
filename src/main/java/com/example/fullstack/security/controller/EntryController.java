@@ -205,10 +205,12 @@ public class EntryController {
 
             String otp = otpService.generateOtp(userSecurity.getEmail());
             emailService.sendEmail(userSecurity.getEmail(), otp);
+            boolean otpSent = true;
 
-            return ResponseEntity.status(HttpStatus.OK).body("OTP sent to your email");
+            return ResponseEntity.ok(Map.of("otpSent", otpSent, "email", userSecurity.getEmail()));
         }catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+            boolean otpSent = false;
+            return ResponseEntity.ok(Map.of("otpSent",otpSent));
         }catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error During Admin Login.");
         }
