@@ -25,11 +25,21 @@ public class JwtTokenUtil {
     private Long EXPIRATION;
 
     public String generateToken(UserSecurity user) {
+
+        long expiration = EXPIRATION; // default expiration
+
+        // Longer expiry for admins
+        if ("ADMIN".equalsIgnoreCase(user.getRole())) {
+            expiration = 7 * 24 * 60 * 60 * 1000L; // 7 days in milliseconds
+        }
+
+
         return Jwts.builder()
                 .setSubject(user.getId() + "," + user.getUsername() + "," + user.getRole())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
+                .setExpiration(new Date(System.currentTimeMillis() + expiration)) //
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
     private Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);

@@ -10,24 +10,26 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 
 public class AdminInitializer  implements CommandLineRunner {
 
-    @Value("${ADMIN_EMAIL:}")
-    private String email;
+    @Value("#{'${admin.emails:}'.split(',')}")
+    private List<String> emails;
 
-    @Value("${ADMIN_PASSWORD:}")
-    private String password;
+    @Value("#{'${admin.passwords:}'.split(',')}")
+    private List<String> passwords;
 
-    @Value("${ADMIN_NAME:Admin}")
-    private String name;
+    @Value("#{'${admin.names:}'.split(',')}")
+    private List<String > names;
 
-    @Value("${ADMIN_ADDRESS:N/A}")
-    private String address;
+    @Value("#{'${admin.addresses:}'.split(',')}")
+    private List<String> addresses;
 
-    @Value("${ADMIN_PHONE:N/A}")
-    private String phone;
+    @Value("#{'${admin.phones:}'.split(',')}")
+    private List<String> phones;
 
     private final SecurityUserRepository securityUserRepository;
 
@@ -41,32 +43,40 @@ public class AdminInitializer  implements CommandLineRunner {
     private final UserRepository userRepository;
 
     @Override
-    public void run(String... args) throws Exception {
-        if (email.isEmpty() || password.isEmpty()) {
-            System.out.println("Admin email or password not provided. Skipping admin creation.");
+    public void run(String... args) {
+        if (emails.isEmpty() || passwords.isEmpty()) {
+            System.out.println("Admin emails or passwords not provided. Skipping admin creation.");
             return;
         }
 
-        if (!securityUserRepository.existsByEmail(email)) {
-            UserSecurity adminSecurity = new UserSecurity();
-            adminSecurity.setEmail(email);
-            adminSecurity.setPassword(passwordEncoder.encode(password));
-            adminSecurity.setPhone(phone);
-            adminSecurity.setRole("ADMIN");
+        for (int i = 0; i < emails.size(); i++) {
+            String email = emails.get(i).trim();
+            String password = passwords.size() > i ? passwords.get(i).trim() : "";
+            String name = names.size() > i ? names.get(i).trim() : "Admin";
+            String phone = phones.size() > i ? phones.get(i).trim() : "N/A";
+            String address = addresses.size() > i ? addresses.get(i).trim() : "N/A";
 
-            User adminUser = new User();
-            adminUser.setEmail(email);
-            adminUser.setName(name);
-            adminUser.setAddress(address);
-            adminUser.setPhone(phone);
+            if (!securityUserRepository.existsByEmail(email)) {
+                UserSecurity adminSecurity = new UserSecurity();
+                adminSecurity.setEmail(email);
+                adminSecurity.setPassword(passwordEncoder.encode(password));
+                adminSecurity.setPhone(phone);
+                adminSecurity.setRole("ADMIN");
 
-            adminUser.setUserSecurity(adminSecurity);
-            adminSecurity.setUser(adminUser);
+                User adminUser = new User();
+                adminUser.setEmail(email);
+                adminUser.setName(name);
+                adminUser.setAddress(address);
+                adminUser.setPhone(phone);
 
-            userRepository.save(adminUser);
-            System.out.println("Admin user created successfully.");
-        } else {
-            System.out.println("Admin user already exists.");
+                adminUser.setUserSecurity(adminSecurity);
+                adminSecurity.setUser(adminUser);
+
+                userRepository.save(adminUser);
+                System.out.println("Admin user created successfully: " + email);
+            } else {
+                System.out.println("Admin user already exists: " + email);
+            }
         }
     }
 }

@@ -13,8 +13,6 @@ import java.util.Objects;
 
 @Entity
 @Data
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Meal {
