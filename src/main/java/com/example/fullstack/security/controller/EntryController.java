@@ -5,11 +5,11 @@ import com.example.fullstack.database.model.User;
 import com.example.fullstack.database.repository.DeletedUserRepository;
 import com.example.fullstack.database.repository.UserRepository;
 import com.example.fullstack.database.service.implementation.CartServiceImpl;
-import com.example.fullstack.security.model.AuthRequest;
-import com.example.fullstack.security.model.AuthResponse;
-import com.example.fullstack.security.model.SignupRequest;
-import com.example.fullstack.security.model.UserSecurity;
+import com.example.fullstack.security.model.*;
 import com.example.fullstack.security.repository.SecurityUserRepository;
+import com.example.fullstack.security.service.OtpService;
+import com.example.fullstack.security.service.ResetPasswordService;
+import com.example.fullstack.security.service.SecurityEmailService;
 import com.example.fullstack.security.util.JwtTokenUtil;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
@@ -20,6 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 
 import org.springframework.security.core.context.SecurityContextHolder;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,16 +39,23 @@ public class EntryController {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final CartServiceImpl cartServiceImpl;
+    private final SecurityEmailService emailService;
+    private final OtpService otpService;
+    private final ResetPasswordService  resetPasswordService;
 
 
-    public EntryController(AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil, SecurityUserRepository securityUserRepository, PasswordEncoder passwordEncoder, UserRepository userRepository, CartServiceImpl cartServiceImpl, DeletedUserRepository deletedUserRepository) {
+    public EntryController(AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil, SecurityUserRepository securityUserRepository, PasswordEncoder passwordEncoder, UserRepository userRepository, CartServiceImpl cartServiceImpl, DeletedUserRepository deletedUserRepository
+    , SecurityEmailService emailService, OtpService otpService, ResetPasswordService resetPasswordService) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenUtil = jwtTokenUtil;
         this.securityUserRepository = securityUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.userRepository= userRepository;
         this.cartServiceImpl = cartServiceImpl;
+        this.otpService = otpService;
+        this.emailService = emailService;
 
+        this.resetPasswordService = resetPasswordService;
     }
 
     @PostMapping("/login")
@@ -182,5 +190,90 @@ public class EntryController {
         }
         return ResponseEntity.ok("Email and password are valid");
     }
+
+
+    @PostMapping("/admin-login")
+    public ResponseEntity<?> adminLogin(@RequestBody AuthRequest authRequest) {
+        try {
+            Authentication authentication = new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword());
+            Authentication authenticated = authenticationManager.authenticate(authentication);
+            UserSecurity userSecurity = (UserSecurity) authenticated.getPrincipal();
+
+            if(!"ADMIN".equals(userSecurity.getRole())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Access Denied. Not an admin.");
+            }
+
+            String otp = otpService.generateOtp(userSecurity.getEmail());
+            emailService.sendEmail(userSecurity.getEmail(), otp);
+
+            return ResponseEntity.status(HttpStatus.OK).body("OTP sent to your email");
+        }catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error During Admin Login.");
+        }
+
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody OtpVerificationRequest otpVerificationRequest) {
+        try {
+            System.out.println(("Received OTP verification request for email: "+ otpVerificationRequest.getEmail()));
+
+            boolean isValid = otpService.verifyOtp(otpVerificationRequest.getEmail(), otpVerificationRequest.getOtp());
+
+            if (!isValid) {
+                System.out.println(("OTP verification failed for email: "+ otpVerificationRequest.getEmail()));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired otp");
+            }
+
+            Optional<UserSecurity> optionalUser = securityUserRepository.findByEmail(otpVerificationRequest.getEmail());
+            if (optionalUser.isEmpty()) {
+                System.out.println(("User not found for email: "+ otpVerificationRequest.getEmail()));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+            }
+
+            UserSecurity userSecurity = optionalUser.get();
+
+            if (!"ADMIN".equals(userSecurity.getRole())) {
+                System.out.println(("Non-admin user attempted to verify OTP: "+ userSecurity.getEmail()));
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied. Not an admin.");
+            }
+
+            String token = jwtTokenUtil.generateToken(userSecurity);
+            System.out.println(("OTP verified successfully for admin: " + userSecurity.getEmail()));
+
+            return ResponseEntity.ok(new AuthResponse(token, userSecurity.getEmail()));
+        } catch (Exception e) {
+            System.out.println(("Error during OTP verification" + e));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error During Verify Otp: " + e.getMessage());
+        }
+    }
+
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email ) {
+        try{
+            resetPasswordService.forgotPassword(email);
+            return ResponseEntity.status(HttpStatus.OK).body("Reset Password Email Sent successfully");
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error During Sending Reset Password Email: " + e.getMessage());
+        }
+
+    }
+
+
+    @PostMapping("/resetPassword")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
+        try{
+            resetPasswordService.resetPassword(resetPasswordRequest);
+            return ResponseEntity.status(HttpStatus.OK).body("Password Reset Successful");
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error while resetting the password");
+        }
+
+    }
+
+
 
 }
