@@ -4,6 +4,7 @@ import com.example.fullstack.database.model.Orders;
 import com.example.fullstack.database.model.Status;
 import com.example.fullstack.database.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,5 +20,15 @@ public interface OrdersRepository extends JpaRepository<Orders, String> {
     List<Orders> findByUserEmailAndStatusNot(String email, Status status);
     void deleteByStatus(Status status);
     List<Orders> findByStatus(Status status);
+    @Query(value = """
+    SELECT * FROM orders
+    ORDER BY
+      CASE 
+        WHEN status IN ('FAILED', 'CANCELLED', 'DELIVERED') THEN 1
+        ELSE 0
+      END,
+      created_at DESC
+""", nativeQuery = true)
+    List<Orders> findOrdersPrioritizingActiveStatuses();
 
 }
