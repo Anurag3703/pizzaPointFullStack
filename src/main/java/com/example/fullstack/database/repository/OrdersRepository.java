@@ -17,7 +17,7 @@ public interface OrdersRepository extends JpaRepository<Orders, String> {
     Optional<Orders> findTopByUserAndStatusOrderByCreatedAtDesc(User user, Status status);
     List<Orders> findByStatusNotInOrderByCreatedAtDesc(List<Status> statuses);
 
-    List<Orders> findByUserEmailAndStatusNot(String email, Status status);
+    List<Orders> findByUserEmailAndStatusNotOrderByCreatedAtDesc(String email, Status status);
     void deleteByStatus(Status status);
     List<Orders> findByStatus(Status status);
     @Query(value = """
