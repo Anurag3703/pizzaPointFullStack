@@ -167,7 +167,7 @@
             // Convert UserSecurity to User
             UserSecurity userSecurity = (UserSecurity) principal;
             User user = getUserFromUserSecurity(userSecurity);
-            List<Orders> order = ordersRepository.findByUserEmailAndStatusNot(email, Status.PENDING);
+            List<Orders> order = ordersRepository.findByUserEmailAndStatusNotOrderByCreatedAtDesc(email, Status.PENDING);
 
             if(order.isEmpty()) {
                 throw new RuntimeException("Customer Has no orders");
