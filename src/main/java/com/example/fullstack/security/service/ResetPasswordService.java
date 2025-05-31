@@ -8,6 +8,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 
 @Service
 public class ResetPasswordService {
@@ -24,9 +27,15 @@ public class ResetPasswordService {
 
     @Transactional
     public void forgotPassword(String email) {
-        String url = "https://pizza-point-k53k.vercel.app/";
+
         UserSecurity userSecurity = securityUserRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User doesn't exist"));
+
+        String token = UUID.randomUUID().toString();
+        LocalDateTime expiryTime = LocalDateTime.now().plusMinutes(10);
+        userSecurity.setResetToken(token);
+        userSecurity.setResetTokenExpiryTime(expiryTime);
+        String url = "https://pizza-point-k53k.vercel.app/reset-password?token=" + token;
         securityEmailService.resetPasswordEmail(userSecurity.getEmail(), url);
         System.out.println("Email Sent Successfully");
     }
@@ -36,6 +45,11 @@ public class ResetPasswordService {
     public void resetPassword(ResetPasswordRequest request) {
         UserSecurity userSecurity = securityUserRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User doesn't exist"));
+
+        if (userSecurity.getResetTokenExpiryTime().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Token has expired");
+        }
+
 
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new IllegalArgumentException("Passwords do not match");
@@ -48,6 +62,8 @@ public class ResetPasswordService {
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());
         userSecurity.setPassword(encodedPassword);
+        userSecurity.setResetToken(null); // Invalidate token
+        userSecurity.setResetTokenExpiryTime(null);
         securityUserRepository.save(userSecurity);
 
     }

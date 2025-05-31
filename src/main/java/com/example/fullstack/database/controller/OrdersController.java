@@ -8,6 +8,7 @@ import com.example.fullstack.database.service.implementation.OrdersServiceImpl;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,13 +41,13 @@ public class OrdersController {
         ordersServiceImpl.addOrder(order);
         return "New order added";
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/all")
     public String addAllOrders(@RequestBody List<Orders> orders) {
         ordersServiceImpl.addAllOrders(orders);
         return "All orders added";
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/status")
     public String updateOrderStatus(@PathVariable String id, @RequestBody Status status) {
         try{
@@ -90,7 +91,7 @@ public class OrdersController {
             return ResponseEntity.badRequest().body("Error during checkout: " + e.getMessage());
         }
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all/orders")
     public ResponseEntity<?> getAllOrders() {
        try{ List<Orders> orders = ordersServiceImpl.getAllOrders();
@@ -102,7 +103,7 @@ public class OrdersController {
            return ResponseEntity.badRequest().body("Error during checkout: " + e.getMessage());
        }
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     private String getStatusMessage(Status status) {
         return switch (status) {
             case PENDING -> "Pending order";

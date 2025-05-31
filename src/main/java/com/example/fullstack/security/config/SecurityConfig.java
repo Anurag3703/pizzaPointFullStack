@@ -127,12 +127,16 @@ public class SecurityConfig {
                 .cors(cors->    cors.configurationSource(corsConfigurationSource()))
                 .addFilterBefore(jwtValidationFilter, UsernamePasswordAuthenticationFilter.class)
 
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-               .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)) // Create session when needed
+               // .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/menuItem/get/category/**","/auth/**").permitAll() // allow unauthenticated access to login/signup
+                        .anyRequest().authenticated() // require JWT for everything else
+                )
+              // .sessionManagement(session -> session
+                //.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)) // Create session when needed
 //                .maximumSessions(1) // Prevent multiple sessions per user
 //                .maxSessionsPreventsLogin(false))
-//                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
                 .build();
     }

@@ -10,6 +10,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -34,6 +35,8 @@ public class UserSecurity implements UserDetails {
     @OneToOne(mappedBy = "userSecurity",cascade = CascadeType.ALL)
     @ToString.Exclude
     private User user;
+    private String resetToken;
+    private LocalDateTime resetTokenExpiryTime;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
