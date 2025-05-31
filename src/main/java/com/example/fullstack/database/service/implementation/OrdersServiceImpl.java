@@ -154,7 +154,8 @@
 
         @Override
         public List<Orders> getAllOrders() {
-            return ordersRepository.findOrdersPrioritizingActiveStatuses();
+            List<Status> excludedStatuses = Arrays.asList(Status.PENDING, Status.CANCELLED);
+            return ordersRepository.findByStatusNotInOrderByCreatedAtDesc(excludedStatuses);
         }
 
         @Override
