@@ -11,6 +11,9 @@ import com.example.fullstack.security.service.OtpService;
 import com.example.fullstack.security.service.ResetPasswordService;
 import com.example.fullstack.security.service.SecurityEmailService;
 import com.example.fullstack.security.util.JwtTokenUtil;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +28,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.SignatureException;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -142,34 +148,95 @@ public class EntryController {
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Token");
     }
-
     @GetMapping("/validate-token/{email}")
-    public ResponseEntity<?> validateTokenForUser(@PathVariable String email) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication != null && authentication.isAuthenticated()) {
-            Object principal = authentication.getPrincipal();
-
-            if (principal instanceof UserSecurity userSecurity) {
-                // First, try to match directly on the UserSecurity email
-                if (userSecurity.getEmail() != null && userSecurity.getEmail().equals(email)) {
-                    return ResponseEntity.ok("Token is valid for user with email : " + authentication.getName());
-                }
-                // If I have a User object inside UserSecurity, checking that too
-                if (userSecurity.getUser() != null && userSecurity.getUser().getEmail() != null
-                        && userSecurity.getUser().getEmail().equals(email)) {
-                    return ResponseEntity.ok("Authenticated User: " + authentication.getName());
-                }
-                // If neither matches, return forbidden
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("Token does not belong to this user");
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("Unexpected principal type: " + (principal != null ? principal.getClass().getName() : "null"));
+    public ResponseEntity<?> validateTokenForUser(@PathVariable String email, HttpServletRequest request) {
+        try {
+            // First, extract and validate the token directly
+            String token = extractTokenFromRequest(request);
+            if (token == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("No token provided");
             }
-        }
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Token");
+            // Check if token is expired before processing authentication
+            if (jwtTokenUtil.isTokenExpired(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Token is expired");
+            }
+
+            // Get authentication from security context
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            if (authentication != null && authentication.isAuthenticated()) {
+                Object principal = authentication.getPrincipal();
+
+                if (principal instanceof UserSecurity userSecurity) {
+                    // Check if the token belongs to the requested user
+                    boolean emailMatches = false;
+
+                    // First, try to match directly on the UserSecurity email
+                    if (userSecurity.getEmail() != null && userSecurity.getEmail().equals(email)) {
+                        emailMatches = true;
+                    }
+                    // If I have a User object inside UserSecurity, check that too
+                    else if (userSecurity.getUser() != null && userSecurity.getUser().getEmail() != null
+                            && userSecurity.getUser().getEmail().equals(email)) {
+                        emailMatches = true;
+                    }
+
+                    if (emailMatches) {
+                        // Get additional token info
+                        Date expirationDate = jwtTokenUtil.getExpirationDateFromToken(token);
+                        long timeUntilExpiry = expirationDate.getTime() - System.currentTimeMillis();
+
+                        Map<String, Object> response = new HashMap<>();
+                        response.put("status", "valid");
+                        response.put("message", "Token is valid for user with email: " + email);
+                        response.put("authenticatedUser", authentication.getName());
+                        response.put("expiresAt", expirationDate);
+                        response.put("timeUntilExpiry", timeUntilExpiry + " ms");
+                        response.put("isExpired", false);
+
+                        return ResponseEntity.ok(response);
+                    } else {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body("Token does not belong to user with email: " + email);
+                    }
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Unexpected principal type: " + (principal != null ? principal.getClass().getName() : "null"));
+                }
+            }
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Token");
+
+        } catch (ExpiredJwtException e) {
+            // Handle expired token exception
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("status", "expired");
+            errorResponse.put("message", "Token is expired");
+            errorResponse.put("expiredAt", e.getClaims().getExpiration());
+            errorResponse.put("isExpired", true);
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+
+        } catch (MalformedJwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Malformed JWT token");
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error validating token: " + e.getMessage());
+        }
+    }
+
+    // Helper method to extract token from request
+    private String extractTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 
 
