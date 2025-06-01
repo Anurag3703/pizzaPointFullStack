@@ -13,4 +13,5 @@ public class OrderItemDTO {
     private String orderId;
     private String menuItemId;
     private List<ExtraDTO> extras;
+    private String orderMenuItemName;
 }

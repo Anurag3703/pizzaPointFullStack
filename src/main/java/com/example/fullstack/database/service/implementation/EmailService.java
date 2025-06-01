@@ -34,7 +34,7 @@ public class EmailService {
 
     public void sendDeliveryEmail(String toEmail, OrderDTO order) throws Exception {
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8"); // specify UTF-8 explicitly
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         ClassPathResource resource = new ClassPathResource("templates/email/delivery-email-template.html");
         StringBuilder htmlContent = new StringBuilder();
@@ -50,19 +50,18 @@ public class EmailService {
         List<OrderItemDTO> orderItems = order.getOrderItems();
         if (orderItems != null) {
             for (OrderItemDTO item : orderItems) {
-                // Use getMenuItemName() if available, else fallback to ID
-                String itemName = item.getMenuItemId();
+                // Get the actual menu item name instead of ID
+                String itemName = item.getOrderMenuItemName() != null ? item.getOrderMenuItemName() : "Unknown Item";
                 String itemText = String.format("%dx %s - Ft %.2f", item.getQuantity(), itemName, item.getPricePerItem());
                 orderItemsHtml.append("<li>").append(itemText).append("</li>");
             }
         }
         String orderItemsSection = orderItemsHtml.toString();
 
-        DecimalFormat df = new DecimalFormat("#.00"); // two decimals fixed
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MMMM dd, yyyy, hh:mm a"); // removed 'z' timezone
+        DecimalFormat df = new DecimalFormat("#.00");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MMMM dd, yyyy, hh:mm a");
 
         String deliveryDateTime = order.getUpdatedAt() != null ? order.getUpdatedAt().format(dtf) : "N/A";
-
 
         String finalContent = htmlContent.toString()
                 .replace("[Customer Name]", order.getUser() != null ? order.getUser().getName() : "Customer")
@@ -81,13 +80,11 @@ public class EmailService {
                 .replace("[Company Email]", "support@pizzapoint.com")
                 .replace("[Company Phone]", "+1-800-PIZZA-99");
 
-
         helper.setFrom(fromEmail);
         helper.setTo(toEmail);
-        helper.setSubject("Order Delivery Confirmation");
+        helper.setSubject("PIZZA POINT - Thank you for your order");
         helper.setText(finalContent, true);
 
         mailSender.send(message);
     }
-
-    }
+}
