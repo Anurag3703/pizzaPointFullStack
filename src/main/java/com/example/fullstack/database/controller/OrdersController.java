@@ -5,6 +5,7 @@ import com.example.fullstack.database.model.*;
 import com.example.fullstack.database.service.implementation.EmailService;
 import com.example.fullstack.database.service.implementation.OrderItemServiceImpl;
 import com.example.fullstack.database.service.implementation.OrdersServiceImpl;
+import com.example.fullstack.database.service.implementation.WhatsAppService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -22,11 +23,13 @@ public class OrdersController {
     private final SimpMessagingTemplate messagingTemplate;
     private final EmailService emailService;
     private final OrderDTOServiceImpl orderDTOServiceImpl;
+    private final WhatsAppService whatsAppService;
     public OrdersController(OrdersServiceImpl ordersServiceImpl,
                             OrderItemServiceImpl orderItemServiceImpl,
                             SimpMessagingTemplate messagingTemplate,
                             EmailService emailService,
-                            OrderDTOServiceImpl orderDTOServiceImpl
+                            OrderDTOServiceImpl orderDTOServiceImpl,
+                            WhatsAppService whatsAppService
 
                             ) {
         this.ordersServiceImpl = ordersServiceImpl;
@@ -34,6 +37,7 @@ public class OrdersController {
         this.messagingTemplate = messagingTemplate;
         this.emailService = emailService;
         this.orderDTOServiceImpl = orderDTOServiceImpl;
+        this.whatsAppService = whatsAppService;
     }
 
     @PostMapping
@@ -53,6 +57,8 @@ public class OrdersController {
         try{
             Status newStatus = Status.valueOf(status.toUpperCase());
             ordersServiceImpl.updateOrderStatus(id, newStatus);
+            Orders updatedOrder = ordersServiceImpl.getOrderById(id);
+            OrderDTO orderDTO = orderDTOServiceImpl.convertToDTO(updatedOrder);
             String statusMessage = getStatusMessage(newStatus);
             System.out.println("Sending to /topic/orders/" + id + ": " + statusMessage);
             messagingTemplate.convertAndSend("/topic/orders/" + id, statusMessage);
@@ -61,12 +67,11 @@ public class OrdersController {
                 System.out.println("Sending to /topic/admin: New order with ID: " + id);
                 messagingTemplate.convertAndSend("/topic/admin", "New order with ID: " + id);
             }
+            whatsAppService.sendOrderStatusUpdate(updatedOrder, newStatus);
             if (newStatus == Status.DELIVERED) {
                 Orders order = ordersServiceImpl.getOrderById(id);
                 String toEmail = order.getUser().getEmail();
-                String subject = "Your Order has been Delivered";
-                String text = "Hello, your order with ID " + id + " has been delivered successfully. You Can find the Invoice Below";
-                emailService.sendEmailWithAttachment(toEmail, subject, text);
+                emailService.sendDeliveryEmail(toEmail, orderDTO);
             }
             return "Order status updated";
         }catch (IllegalArgumentException e){
@@ -129,6 +134,10 @@ public class OrdersController {
             OrderDTO responseDTO = orderDTOServiceImpl.convertToDTO(order);
             messagingTemplate.convertAndSend("/topic/orders/" + order.getOrderId(), "Your order has been placed");
             messagingTemplate.convertAndSend("/topic/admin", "New order received: " + order.getOrderId());
+            if (responseDTO.getStatus() == Status.PLACED) {
+                whatsAppService.sendNewOrderNotification(order);
+            }
+
 
             System.out.println("WebSocket message sent for order ID: " + order.getOrderId());
 

@@ -5,6 +5,7 @@ import com.example.fullstack.database.model.Status;
 import com.example.fullstack.database.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,5 +31,8 @@ public interface OrdersRepository extends JpaRepository<Orders, String> {
       created_at DESC
 """, nativeQuery = true)
     List<Orders> findOrdersPrioritizingActiveStatuses();
+    @Query("SELECT o FROM Orders o WHERE o.orderId = :orderId AND o.user.id = :userId")
+    Optional<Orders> findByOrderIdAndUserId(@Param("orderId") String orderId, @Param("userId") Long userId);
+
 
 }
