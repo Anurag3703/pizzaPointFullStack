@@ -193,19 +193,25 @@
 
         @Override
         @Transactional
-        public Orders confirmCheckout(String orderId,PaymentMethod paymentMethod,  OrderType orderType) {
+        public Orders confirmCheckout(String orderId, PaymentMethod paymentMethod, OrderType orderType) {
             UserSecurity userSecurity = (UserSecurity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             User currentUser = getUserFromUserSecurity(userSecurity);
 
+            // Find the order first
+            // SECURE: Query directly for orders that belong to this user
             Orders pendingOrder = ordersRepository.findById(orderId)
                     .orElseThrow(() -> new RuntimeException("Order not found"));
 
             if (!pendingOrder.getUser().getId().equals(currentUser.getId())) {
                 throw new RuntimeException("Unauthorized: This order does not belong to the current user");
             }
-
+            // Additional check for order status
             if (pendingOrder.getStatus() == Status.PLACED) {
-                throw new RuntimeException("This order has already been Placed");
+                throw new RuntimeException("This order has already been placed");
+            }
+
+            if (pendingOrder.getStatus() != Status.PENDING) {
+                throw new RuntimeException("Only pending orders can be confirmed");
             }
 
             Address selectedAddress = addressRepository.findByUserAndSelected(currentUser, true);
@@ -225,13 +231,13 @@
             pendingOrder.setBottleDepositFee(pendingOrder.getTotalBottleDepositFee());
             pendingOrder.setTotalCartAmount(pendingOrder.getTotalCartAmount());
 
-
             Orders confirmedOrder = ordersRepository.save(pendingOrder);
 
             // Clear the cart only after confirmation
             if(cartRepository.existsByUser(currentUser)) {
                 cartRepository.deleteByUser(currentUser);
             }
+
             return confirmedOrder;
         }
 
