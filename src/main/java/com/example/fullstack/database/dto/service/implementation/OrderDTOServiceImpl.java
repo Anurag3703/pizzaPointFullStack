@@ -31,6 +31,7 @@ public class OrderDTOServiceImpl implements OrderDTOService {
                 .map(item -> {
                     OrderItemDTO dtoItem = new OrderItemDTO();
                     dtoItem.setId(item.getId());
+                    dtoItem.setOrderMenuItemName(item.getMenuItem().getName());
                     dtoItem.setQuantity(item.getQuantity());
                     dtoItem.setPricePerItem(item.getPricePerItem());
                     dtoItem.setOrderId(item.getOrder().getOrderId());
