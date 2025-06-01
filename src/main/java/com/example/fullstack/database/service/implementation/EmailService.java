@@ -26,8 +26,7 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    @Value("${pizza.point.logo.url}") // Add this to application.properties, e.g., pizza.point.logo.url=https://pizzapoint.com/logo.png
-    private String logoUrl;
+
     @Autowired
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
@@ -80,8 +79,8 @@ public class EmailService {
                 .replace("[Support Link]", "https://pizzapoint.com/support")
                 .replace("[Company Address]", "123 Pizza Lane, Food City")
                 .replace("[Company Email]", "support@pizzapoint.com")
-                .replace("[Company Phone]", "+1-800-PIZZA-99")
-                .replace("[Logo URL]", logoUrl != null ? logoUrl : "https://i.ibb.co/ch0L4LD8/Logo.jpg");
+                .replace("[Company Phone]", "+1-800-PIZZA-99");
+
 
         helper.setFrom(fromEmail);
         helper.setTo(toEmail);
