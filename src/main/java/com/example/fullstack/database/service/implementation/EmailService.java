@@ -3,6 +3,7 @@ package com.example.fullstack.database.service.implementation;
 import com.example.fullstack.database.dto.OrderDTO;
 import com.example.fullstack.database.dto.OrderItemDTO;
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -27,7 +28,7 @@ public class EmailService {
 
     @Value("${pizza.point.logo.url}") // Add this to application.properties, e.g., pizza.point.logo.url=https://pizzapoint.com/logo.png
     private String logoUrl;
-
+    @Autowired
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
