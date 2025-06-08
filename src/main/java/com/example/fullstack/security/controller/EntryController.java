@@ -154,14 +154,20 @@ public class EntryController {
             // First, extract and validate the token directly
             String token = extractTokenFromRequest(request);
             if (token == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body("No token provided");
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("status", "invalid");
+                errorResponse.put("message", "No token provided");
+                errorResponse.put("isExpired", false);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
             }
 
             // Check if token is expired before processing authentication
             if (jwtTokenUtil.isTokenExpired(token)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body("Token is expired");
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("status", "expired");
+                errorResponse.put("message", "Token is expired");
+                errorResponse.put("isExpired", true);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
             }
 
             // Get authentication from security context
@@ -199,16 +205,26 @@ public class EntryController {
 
                         return ResponseEntity.ok(response);
                     } else {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                                .body("Token does not belong to user with email: " + email);
+                        Map<String, Object> errorResponse = new HashMap<>();
+                        errorResponse.put("status", "forbidden");
+                        errorResponse.put("message", "Token does not belong to user with email: " + email);
+                        errorResponse.put("isExpired", false);
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
                     }
                 } else {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Unexpected principal type: " + (principal != null ? principal.getClass().getName() : "null"));
+                    Map<String, Object> errorResponse = new HashMap<>();
+                    errorResponse.put("status", "error");
+                    errorResponse.put("message", "Unexpected principal type: " + (principal != null ? principal.getClass().getName() : "null"));
+                    errorResponse.put("isExpired", false);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
                 }
             }
 
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Token");
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("status", "invalid");
+            errorResponse.put("message", "Invalid Token");
+            errorResponse.put("isExpired", false);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
 
         } catch (ExpiredJwtException e) {
             // Handle expired token exception
@@ -221,12 +237,18 @@ public class EntryController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
 
         } catch (MalformedJwtException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Malformed JWT token");
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("status", "malformed");
+            errorResponse.put("message", "Malformed JWT token");
+            errorResponse.put("isExpired", false);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error validating token: " + e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("status", "error");
+            errorResponse.put("message", "Error validating token: " + e.getMessage());
+            errorResponse.put("isExpired", false);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
