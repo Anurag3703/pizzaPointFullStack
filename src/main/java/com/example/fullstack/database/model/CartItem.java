@@ -21,6 +21,7 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long cartItemId;
     @ManyToOne(fetch = FetchType.EAGER)
+
     @JsonIgnore
     private Cart cart;     // CartItem --> Cart --> User
 
