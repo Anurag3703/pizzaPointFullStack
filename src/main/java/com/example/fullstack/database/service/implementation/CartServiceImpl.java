@@ -13,7 +13,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 @Service
 public class CartServiceImpl implements CartService {
 
@@ -25,7 +28,7 @@ public class CartServiceImpl implements CartService {
 
     @Autowired
     public CartServiceImpl(CartRepository cartRepository, ExtraRepository extraRepository,
-                           UserService userService, MenuItemRepository menuItemRepository,CartItemRepository cartItemRepository) {
+                           UserService userService, MenuItemRepository menuItemRepository, CartItemRepository cartItemRepository) {
         this.cartRepository = cartRepository;
         this.extraRepository = extraRepository;
         this.userService = userService;
@@ -35,7 +38,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    public void addItemToCart(HttpSession session, String menuItemId, Long quantity, List<String> extraItemId,String instructions) {
+    public void addItemToCart(HttpSession session, String menuItemId, Long quantity, List<String> extraItemId, String instructions) {
         User currentUser = userService.getCurrentUser();
         MenuItem menuItem = menuItemRepository.findById(menuItemId)
                 .orElseThrow(() -> new RuntimeException("Menu Item Not Found"));
@@ -50,43 +53,41 @@ public class CartServiceImpl implements CartService {
                     newCart.setTotalPrice(BigDecimal.ZERO);
                     return cartRepository.save(newCart);
                 });
-        //Extras
+
+        // Get extras
         List<Extra> extras = extraRepository.findAllById(extraItemId);
 
-        // Cart Item Deletion Addition Logic
-        CartItem cartItem = cartItemRepository.findByCartAndMenuItem(cart, menuItem);
-        if (cartItem == null) {
+        // Check if same item with same extras and instructions already exists
+        CartItem existingCartItem = cart.getCartItems().stream()
+                .filter(item -> item.getMenuItem().equals(menuItem) &&
+                        hasSameExtras(item.getExtras(), extras) &&
+                        Objects.equals(item.getInstruction(), instructions))
+                .findFirst()
+                .orElse(null);
+
+        CartItem cartItem;
+        if (existingCartItem != null) {
+            // Update existing cart item
+            cartItem = existingCartItem;
+            cartItem.setQuantity(cartItem.getQuantity() + quantity);
+        } else {
+            // Create new cart item
             cartItem = new CartItem();
             cartItem.setCart(cart);
             cartItem.setMenuItem(menuItem);
             cartItem.setQuantity(quantity);
             cartItem.setExtras(extras);
             cartItem.setInstruction(instructions);
-        } else {
-            cartItem.setQuantity(cartItem.getQuantity() + quantity); // If cartItem is same just quantity is increased
+            cart.getCartItems().add(cartItem); // Add to cart's item list only for new items
         }
 
-        // Cart Item Total Price
-        BigDecimal itemBasePrice = menuItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
-        BigDecimal itemExtrasPrice = extras.stream()
-                .map(Extra::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .multiply(BigDecimal.valueOf(cartItem.getQuantity()));
-        BigDecimal totalItemPrice = itemBasePrice.add(itemExtrasPrice);
-
-        cartItem.setTotalPrice(totalItemPrice);
+        // Recalculate cart item total price using the helper method
+        cartItem.setTotalPrice(calculateCartItemTotalPrice(cartItem));
         cartItemRepository.save(cartItem);
 
-        // Adds new cart item from existing it makes a bit slower as it calculates again and again
-        cart.getCartItems().add(cartItem);
-        BigDecimal cartTotal = cart.getCartItems().stream()
-                .map(CartItem::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .add(BigDecimal.valueOf(400));
-
-
-        cart.setTotalPrice(calculateCartTotalPrice(cart));  //Final price in cart
-        cartRepository.save(cart); // Save Cart
+        // Recalculate cart total price
+        cart.setTotalPrice(calculateCartTotalPrice(cart));
+        cartRepository.save(cart);
     }
 
     @Override
@@ -100,37 +101,33 @@ public class CartServiceImpl implements CartService {
 
             Cart cart = cartItem.getCart();
 
-            //Case 1 : When Quantity is zero
+            // Case 1: When quantity is zero or negative - remove item
             if (quantity <= 0) {
-                cart.getCartItems().remove(cartItem);  // Removed from the List of cart item in the Cart
-                cartItemRepository.delete(cartItem);   //Removed from CartItem table
+                cart.getCartItems().remove(cartItem);  // Remove from the List of cart item in the Cart
+                cartItemRepository.delete(cartItem);   // Remove from CartItem table
 
-                BigDecimal cartTotal = cart.getCartItems().stream() //Total price in the cart after removing the cartItem
-                        .map(CartItem::getTotalPrice)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-                cart.setTotalPrice(cartTotal);
-                cartRepository.save(cart);  // saved cart
+                // Recalculate cart total using helper method
+                cart.setTotalPrice(calculateCartTotalPrice(cart));
+                cartRepository.save(cart);  // Save cart
 
                 logger.debug("Cart item with ID {} removed from the database", cartItemId);
                 return;
             }
 
-            //Case 2 : Addition or Subtraction of cartItem in cart
+            // Case 2: Update quantity
             cartItem.setQuantity(quantity);
-            cartItem.setTotalPrice(cartItem.getMenuItem().getPrice().multiply(BigDecimal.valueOf(quantity)));
+            // Use the helper method to calculate total price including extras
+            cartItem.setTotalPrice(calculateCartItemTotalPrice(cartItem));
             cartItemRepository.save(cartItem);
 
-            BigDecimal cartTotal = cart.getCartItems().stream() // Total price in Case 2
-                    .map(CartItem::getTotalPrice)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            cart.setTotalPrice(cartTotal);
-            cartRepository.save(cart);  //save cart
+            // Recalculate cart total using helper method
+            cart.setTotalPrice(calculateCartTotalPrice(cart));
+            cartRepository.save(cart);  // Save cart
 
         } catch (RuntimeException e) {
             logger.error("Error updating cart item: {}", e.getMessage());
             throw e;
         }
-
     }
 
     @Override
@@ -140,7 +137,17 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public BigDecimal getCartTotalPrice(HttpSession session) {
-        return null;
+        User currentUser = userService.getCurrentUser();
+        if (currentUser == null) {
+            return BigDecimal.ZERO;
+        }
+
+        Cart cart = cartRepository.findByUser(currentUser)
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        return cart != null ? cart.getTotalPrice() : BigDecimal.ZERO;
     }
 
     @Override
@@ -159,7 +166,8 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public void transferGuestCartToUser(HttpSession session, User user) {
-
+        // Implementation for transferring guest cart to authenticated user
+        // This can be implemented based on your specific requirements
     }
 
     @Override
@@ -175,13 +183,17 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public BigDecimal calculateCartTotalPrice(Cart cart) {
-
-        // Fixed delivery fee
-        return cart.getCartItems().stream()
+        // Calculate total of all cart items
+        BigDecimal itemsTotal = cart.getCartItems().stream()
                 .map(CartItem::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
 
+        // Add delivery fee if needed (uncomment and modify as per your business logic)
+        // BigDecimal deliveryFee = BigDecimal.valueOf(400);
+        // return itemsTotal.add(deliveryFee);
+
+        return itemsTotal;
+    }
 
     @Override
     public Cart getCurrentUserCart() {
@@ -191,11 +203,34 @@ public class CartServiceImpl implements CartService {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Cart not found for the current user"));
     }
+
+    // Helper method to check if two lists of extras are the same
+    private boolean hasSameExtras(List<Extra> extras1, List<Extra> extras2) {
+        if (extras1 == null && extras2 == null) {
+            return true;
+        }
+        if (extras1 == null || extras2 == null) {
+            return false;
+        }
+        if (extras1.size() != extras2.size()) {
+            return false;
+        }
+
+        // Sort both lists by ID and compare
+        List<String> ids1 = extras1.stream()
+                .map(Extra::getId)
+                .sorted()
+                .collect(Collectors.toList());
+        List<String> ids2 = extras2.stream()
+                .map(Extra::getId)
+                .sorted()
+                .collect(Collectors.toList());
+
+        return ids1.equals(ids2);
+    }
 }
 
 //    @Override
 //    public Cart getCartByUser(User user) {
 //        return null;
 //    }
-
-
