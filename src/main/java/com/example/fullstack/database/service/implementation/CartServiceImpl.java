@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.Objects;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -60,7 +61,7 @@ public class CartServiceImpl implements CartService {
                 .filter(ci ->
                         ci.getExtras().size() == extras.size() &&
                                 ci.getExtras().containsAll(extras) &&
-                                ci.getInstruction().equals(instructions))
+                                java.util.Objects.equals(ci.getInstruction(), instructions))
                 .findFirst();
 
         CartItem cartItem;
@@ -93,7 +94,6 @@ public class CartServiceImpl implements CartService {
         cart.setTotalPrice(calculateCartTotalPrice(cart));
         cartRepository.save(cart);
     }
-
 
     @Override
     @Transactional
