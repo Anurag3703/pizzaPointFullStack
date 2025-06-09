@@ -33,7 +33,6 @@ public class CartServiceImpl implements CartService {
         this.cartItemRepository = cartItemRepository;
     }
 
-    // Modified addItemToCart method
     @Override
     @Transactional
     public void addItemToCart(HttpSession session, String menuItemId, Long quantity, List<String> extraItemId, String instructions) {
@@ -54,7 +53,7 @@ public class CartServiceImpl implements CartService {
 
         List<Extra> extras = extraRepository.findAllById(extraItemId);
 
-        // NEW: Check for existing cart items with same configS
+        // NEW: Check for existing cart items with same configs
         List<CartItem> existingItems = cartItemRepository.findByCartAndMenuItem(cart, menuItem);
 
         Optional<CartItem> matchingItem = existingItems.stream()
@@ -75,6 +74,9 @@ public class CartServiceImpl implements CartService {
             cartItem.setQuantity(quantity);
             cartItem.setExtras(extras);
             cartItem.setInstruction(instructions);
+
+            // FIX: Add the new cart item to the cart's collection
+            cart.getCartItems().add(cartItem);
         }
 
         // Calculate prices (unchanged)
@@ -87,7 +89,7 @@ public class CartServiceImpl implements CartService {
         cartItem.setTotalPrice(itemBasePrice.add(itemExtrasPrice));
         cartItemRepository.save(cartItem);
 
-        // Update cart total (FIXED: removed erroneous +400)
+        // Update cart total - now it will include the new item
         cart.setTotalPrice(calculateCartTotalPrice(cart));
         cartRepository.save(cart);
     }
