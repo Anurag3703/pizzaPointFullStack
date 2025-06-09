@@ -54,7 +54,7 @@ public class CartServiceImpl implements CartService {
 
         List<Extra> extras = extraRepository.findAllById(extraItemId);
 
-        // NEW: Check for existing cart items with same config
+        // NEW: Check for existing cart items with same configS
         List<CartItem> existingItems = cartItemRepository.findByCartAndMenuItem(cart, menuItem);
 
         Optional<CartItem> matchingItem = existingItems.stream()
