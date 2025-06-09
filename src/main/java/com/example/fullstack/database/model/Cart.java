@@ -22,7 +22,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "cartId")
-public class Cart {
+public class  Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int cartId;
