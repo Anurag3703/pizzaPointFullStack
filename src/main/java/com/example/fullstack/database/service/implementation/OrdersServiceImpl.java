@@ -198,14 +198,13 @@
             User currentUser = getUserFromUserSecurity(userSecurity);
 
             // Find the order first
-            // SECURE: Query directly for orders that belong to this user
             Orders pendingOrder = ordersRepository.findById(orderId)
                     .orElseThrow(() -> new RuntimeException("Order not found"));
 
             if (!pendingOrder.getUser().getId().equals(currentUser.getId())) {
                 throw new RuntimeException("Unauthorized: This order does not belong to the current user");
             }
-            // Additional check for order status
+
             if (pendingOrder.getStatus() == Status.PLACED) {
                 throw new RuntimeException("This order has already been placed");
             }
@@ -219,17 +218,35 @@
                 throw new RuntimeException("No selected address found for the current user");
             }
 
+            // Set order details
             pendingOrder.setAddress(selectedAddress);
             pendingOrder.setPaymentMethod(paymentMethod);
             pendingOrder.setOrderType(orderType);
             pendingOrder.setOrderSequence(orderSequenceUtil.getNextOrderSequence());
             pendingOrder.setStatus(paymentMethod == PaymentMethod.CASH ? Status.PLACED : Status.PENDING);
-            pendingOrder.setDeliveryFee(BigDecimal.valueOf(400));
-            pendingOrder.setTotalPrice(pendingOrder.getTotalPrice());
             pendingOrder.setUpdatedAt(LocalDateTime.now());
-            pendingOrder.setServiceFee(pendingOrder.getServiceFee());
-            pendingOrder.setBottleDepositFee(pendingOrder.getTotalBottleDepositFee());
-            pendingOrder.setTotalCartAmount(pendingOrder.getTotalCartAmount());
+
+            // Set fees
+            pendingOrder.setDeliveryFee(BigDecimal.valueOf(400));
+            pendingOrder.setServiceFee(pendingOrder.getServiceFee()); // Keep existing service fee
+
+            // Calculate and set bottle deposit fee
+            BigDecimal bottleDepositFee = pendingOrder.getTotalBottleDepositFee();
+            pendingOrder.setBottleDepositFee(bottleDepositFee);
+
+            // Calculate cart amount (items only, without fees)
+            BigDecimal cartAmount = pendingOrder.getOrderItems().stream()
+                    .map(item -> item.getPricePerItem().multiply(BigDecimal.valueOf(item.getQuantity())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            pendingOrder.setTotalCartAmount(cartAmount);
+
+            // Recalculate total price properly
+            BigDecimal totalPrice = cartAmount
+                    .add(pendingOrder.getDeliveryFee())
+                    .add(pendingOrder.getServiceFee() != null ? pendingOrder.getServiceFee() : BigDecimal.ZERO)
+                    .add(bottleDepositFee);
+
+            pendingOrder.setTotalPrice(totalPrice);
 
             Orders confirmedOrder = ordersRepository.save(pendingOrder);
 

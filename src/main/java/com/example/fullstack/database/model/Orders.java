@@ -1,16 +1,13 @@
 package com.example.fullstack.database.model;
 
 import jakarta.persistence.*;
-
 import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
 
 @Entity
 @Data
@@ -46,10 +43,14 @@ public class Orders {
     @Enumerated(EnumType.STRING)
     private OrderType orderType;
 
-    private BigDecimal serviceFee  = BigDecimal.valueOf(150);
-    private  BigDecimal bottleDepositFee  = BigDecimal.valueOf(50);
+    private BigDecimal serviceFee = BigDecimal.valueOf(150);
 
 
+    // Initialize to ZERO, not 50
+    private BigDecimal bottleDepositFee = BigDecimal.ZERO;
+
+    // ADDED: Constant for per-bottle deposit fee
+    private static final BigDecimal PER_BOTTLE_DEPOSIT_FEE = BigDecimal.valueOf(50);
 
     @PrePersist
     public void generateId() {
@@ -57,18 +58,19 @@ public class Orders {
             orderId = UUID.randomUUID().toString();
         }
     }
-    public BigDecimal getPerBottleDepositFee() {
-        return bottleDepositFee;
-    }
 
+    //  This method should return the per-bottle fee, not the total
+    public BigDecimal getPerBottleDepositFee() {
+        return PER_BOTTLE_DEPOSIT_FEE;
+    }
 
     @Transient
     public BigDecimal getTotalCartAmount() {
         return orderItems.stream()
                 .map(item -> item.getPricePerItem().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
     }
+
     @Transient
     public BigDecimal getTotalBottleDepositFee() {
         long drinkItemCount = orderItems.stream()
@@ -76,25 +78,9 @@ public class Orders {
                 .mapToLong(OrderItem::getQuantity)
                 .sum();
 
-        return bottleDepositFee.multiply(BigDecimal.valueOf(drinkItemCount));
+        //  PER_BOTTLE_DEPOSIT_FEE instead of the field
+        return PER_BOTTLE_DEPOSIT_FEE.multiply(BigDecimal.valueOf(drinkItemCount));
     }
-
-//    public BigDecimal getTotalPrice() {
-//        BigDecimal total = BigDecimal.ZERO;
-//        if (orderItems != null) {
-//            for (OrderItem item : orderItems) {
-//                total = total.add(item.getTotalPrice());
-//            }
-//        }
-//        if (deliveryFee != null) {
-//            total = total.add(deliveryFee);
-//        }
-//        total = total.add(serviceFee);
-//        total = total.add(bottleDepositFee);
-//        return total;
-//
-//
-//    }
 
     @PreUpdate
     public void preUpdate() {
@@ -103,10 +89,9 @@ public class Orders {
 
     @Transient
     public String getFormattedOrderNumber() {
-        if (orderSequence== null) {
+        if (orderSequence == null) {
             return null;
         }
         return "#Order-" + String.format("%04d", orderSequence);
     }
-
 }
