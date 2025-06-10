@@ -10,7 +10,7 @@ import java.util.List;
 public class CartDTO {
     private int cartId;
     private List<CartItemDTO> cartItems;
-    private Long userId;
+    private UserDTO user;
     private LocalDateTime createdAt;
     private BigDecimal totalPrice;
     private String sessionId;

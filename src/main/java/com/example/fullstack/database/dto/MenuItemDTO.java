@@ -5,7 +5,6 @@ import com.example.fullstack.database.model.Size;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Data
 public class MenuItemDTO {
@@ -17,6 +16,5 @@ public class MenuItemDTO {
     private Size size;
     private Boolean isAvailable;
     private String imageUrl;
-    private List<Long> cartEntryIds; // IDs of CartItems
-    private List<Long> orderItemIds; // IDs of OrderItems
+
 }

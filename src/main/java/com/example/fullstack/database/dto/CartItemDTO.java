@@ -11,8 +11,8 @@ import java.util.List;
 public class CartItemDTO {
     private Long cartItemId;
     private int cartId;
-    private String menuItemId;
-    private List<String> extraIds;
+    private MenuItemDTO menuItem;
+    private List<ExtraDTO> extras;
     private Long quantity;
     private BigDecimal totalPrice;
     private String instruction;

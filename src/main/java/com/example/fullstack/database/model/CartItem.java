@@ -1,9 +1,6 @@
 package com.example.fullstack.database.model;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -27,6 +24,7 @@ public class CartItem {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "menu_item_id", nullable = false)
+    @JsonIdentityReference(alwaysAsId = false)
     private MenuItem menuItem;    // CartItem --> MenuItem
 
     @ManyToMany(fetch = FetchType.EAGER)
