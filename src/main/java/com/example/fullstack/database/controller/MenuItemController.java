@@ -1,5 +1,7 @@
     package com.example.fullstack.database.controller;
 
+    import com.example.fullstack.database.dto.MenuItemDTO;
+    import com.example.fullstack.database.dto.service.implementation.MenuItemDTOServiceImpl;
     import com.example.fullstack.database.model.MenuItem;
     import com.example.fullstack.database.model.MenuItemCategory;
     import com.example.fullstack.database.model.Size;
@@ -15,8 +17,10 @@
     public class MenuItemController {
 
         MenuItemServiceImpl menuItemServiceImpl;
-        public MenuItemController(MenuItemServiceImpl menuItemServiceImpl) {
+        private final MenuItemDTOServiceImpl menuItemDTOServiceImpl;
+        public MenuItemController(MenuItemServiceImpl menuItemServiceImpl, MenuItemDTOServiceImpl menuItemDTOServiceImpl) {
             this.menuItemServiceImpl = menuItemServiceImpl;
+            this.menuItemDTOServiceImpl = menuItemDTOServiceImpl;
         }
 
         @PreAuthorize("hasRole('ADMIN')")
@@ -48,17 +52,24 @@
         }
 
         @GetMapping("/items")
-        public List<MenuItem> getMenuItemsByCategoryAndSize(
+        public List<MenuItemDTO> getMenuItemsByCategoryAndSize(
                 @RequestParam MenuItemCategory category,
                 @RequestParam Size size) {
-            return menuItemServiceImpl.getMenuItemsByCategoryAndSize(category, size);
+            return menuItemServiceImpl.getMenuItemsByCategoryAndSize(category, size)
+                    .stream()
+                    .map(menuItemDTOServiceImpl::convertToDTO)
+                    .toList();
         }
+
 
         @GetMapping("/get/category/{category}")
-        public List<MenuItem> getMenuItemsByCategory(@PathVariable MenuItemCategory category) {
-            return menuItemServiceImpl.getMenuItemsByCategory(category);
-
+        public List<MenuItemDTO> getMenuItemsByCategory(@PathVariable MenuItemCategory category) {
+            return menuItemServiceImpl.getMenuItemsByCategory(category)
+                    .stream()
+                    .map(menuItemDTOServiceImpl::convertToDTO)
+                    .toList();
         }
+
 
         @DeleteMapping("/delete/all")
         public String deleteAllMenuItems() {
@@ -67,7 +78,11 @@
         }
 
         @GetMapping("/get/name/size")
-        public List<MenuItem> getMenuItemsByName(@RequestParam String name, @RequestParam Size size) {
-            return menuItemServiceImpl.getMenuItemByNameAndSize(name, size);
+        public List<MenuItemDTO> getMenuItemsByName(@RequestParam String name, @RequestParam Size size) {
+            return menuItemServiceImpl.getMenuItemByNameAndSize(name, size)
+                    .stream()
+                    .map(menuItemDTOServiceImpl::convertToDTO)
+                    .toList();
         }
+
     }
