@@ -11,7 +11,6 @@ import java.util.List;
 
 
 @Entity
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
