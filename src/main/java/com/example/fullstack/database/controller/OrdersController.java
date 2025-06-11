@@ -73,6 +73,13 @@ public class OrdersController {
                 String toEmail = order.getUser().getEmail();
                 emailService.sendDeliveryEmail(toEmail, orderDTO);
             }
+
+            if((newStatus == Status.CANCELLED)) {
+                Orders order = ordersServiceImpl.getOrderById(id);
+                String toEmail = order.getUser().getEmail();
+                emailService.sendCancellationEmail(toEmail, orderDTO);
+
+            }
             return "Order status updated";
         }catch (IllegalArgumentException e){
             return e.getMessage();
