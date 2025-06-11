@@ -87,4 +87,53 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendCancellationEmail(String toEmail, OrderDTO order) throws Exception {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        ClassPathResource resource = new ClassPathResource("templates/email/cancellation-email-template.html");
+        StringBuilder htmlContent = new StringBuilder();
+        try (InputStream inputStream = resource.getInputStream();
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                htmlContent.append(line).append("\n");
+            }
+        }
+
+        StringBuilder orderItemsHtml = new StringBuilder();
+        List<OrderItemDTO> orderItems = order.getOrderItems();
+        if (orderItems != null) {
+            for (OrderItemDTO item : orderItems) {
+                String itemName = item.getOrderMenuItemName() != null ? item.getOrderMenuItemName() : "Unknown Item";
+                String itemText = String.format("%dx %s - Ft %.2f", item.getQuantity(), itemName, item.getPricePerItem());
+                orderItemsHtml.append("<li>").append(itemText).append("</li>");
+            }
+        }
+        String orderItemsSection = orderItemsHtml.toString();
+
+        DecimalFormat df = new DecimalFormat("#.00");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MMMM dd, yyyy, hh:mm a");
+
+        String cancellationDateTime = order.getUpdatedAt() != null ? order.getUpdatedAt().format(dtf) : "N/A";
+
+        String finalContent = htmlContent.toString()
+                .replace("[Customer Name]", order.getUser() != null ? order.getUser().getName() : "Customer")
+                .replace("[Order ID]", order.getOrderId() != null ? order.getOrderId() : "N/A")
+                .replace("[Cancellation DateTime]", cancellationDateTime)
+                .replace("[Order Items]", orderItemsSection)
+                .replace("[Total Cart Amount]", df.format(order.getTotalCartAmount() != null ? order.getTotalCartAmount() : BigDecimal.ZERO))
+                .replace("[Delivery Fee]", df.format(order.getDeliveryFee() != null ? order.getDeliveryFee() : BigDecimal.ZERO))
+                .replace("[Service Fee]", df.format(order.getServiceFee() != null ? order.getServiceFee() : BigDecimal.ZERO))
+                .replace("[Bottle Deposit Fee]", df.format(order.getBottleDepositFee() != null ? order.getBottleDepositFee() : BigDecimal.ZERO))
+                .replace("[Total Price]", df.format(order.getTotalPrice() != null ? order.getTotalPrice() : BigDecimal.ZERO));
+
+        helper.setFrom(fromEmail);
+        helper.setTo(toEmail);
+        helper.setSubject("PIZZA POINT - Order Cancellation Notice");
+        helper.setText(finalContent, true);
+
+        mailSender.send(message);
+    }
 }

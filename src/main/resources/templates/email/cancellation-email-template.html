@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #ff0000;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            margin-top: 10px;
+        }
+        .content {
+            padding: 20px;
+            color: #333333;
+        }
+        .content h2 {
+            font-size: 20px;
+            color: #ff0000;
+            margin-top: 0;
+        }
+        .content p {
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 10px 0;
+        }
+        .cancellation-notice {
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .cancellation-notice h3 {
+            color: #d32f2f;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .cancellation-notice p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .order-items {
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .order-items h3 {
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin: 0;
+            font-size: 16px;
+            color: #ff0000;
+        }
+        .order-items ul {
+            list-style: none;
+            padding: 0 10px;
+            margin: 0;
+        }
+        .order-items li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        .order-items li:last-child {
+            border-bottom: none;
+        }
+        .refund-info {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #e8f5e8;
+            border-radius: 5px;
+            border-left: 4px solid #4caf50;
+        }
+        .refund-info h3 {
+            color: #2e7d32;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        .refund-info p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #333;
+        }
+        .order-summary {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .order-summary p {
+            margin: 5px 0;
+        }
+        .refunded-amount {
+            font-weight: bold;
+            color: #2e7d32;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #ff0000;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-size: 16px;
+        }
+        .footer {
+            background-color: #000000;
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            color: #ffffff;
+        }
+        .footer a {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+        @media screen and (max-width: 600px) {
+            .container {
+                width: 90%;
+            }
+            .header .logo {
+                max-width: 100px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .content h2 {
+                font-size: 18px;
+            }
+            .content p {
+                font-size: 14px;
+            }
+            .order-items h3 {
+                font-size: 14px;
+            }
+            .order-items li {
+                font-size: 12px;
+            }
+            .order-summary {
+                font-size: 12px;
+            }
+            .button {
+                font-size: 14px;
+                padding: 10px 20px;
+            }
+            .cancellation-notice h3 {
+                font-size: 16px;
+            }
+            .refund-info h3 {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="https://i.ibb.co/ch0L4LD8/Logo.jpg" alt="Pizza Point Logo" class="logo">
+        <h1>Order Cancellation Notice</h1>
+    </div>
+    <div class="content">
+        <h2>Dear [Customer Name],</h2>
+
+        <div class="cancellation-notice">
+            <h3>Order Cancelled</h3>
+            <p>We regret to inform you that your order with ID <strong>[Order ID]</strong> has been cancelled on [Cancellation DateTime].</p>
+            <p>The shop has cancelled your order. Sorry for the inconvenience.</p>
+        </div>
+
+        <div class="order-items">
+            <h3>Cancelled Order Items</h3>
+            <ul>
+                [Order Items]
+            </ul>
+        </div>
+
+        <div class="refund-info">
+            <h3>Refund Information</h3>
+            <p>If you paid by card, the payment will be refunded in 3-5 business days.</p>
+        </div>
+
+        <div class="order-summary">
+            <p><strong>Cart Total:</strong> Ft&nbsp;[Total Cart Amount]</p>
+            <p><strong>Delivery Fee:</strong> Ft&nbsp;[Delivery Fee]</p>
+            <p><strong>Service Fee:</strong> Ft&nbsp;[Service Fee]</p>
+            <p><strong>Bottle Deposit Fee:</strong> Ft&nbsp;[Bottle Deposit Fee]</p>
+            <p><strong>Total Amount:</strong> Ft&nbsp;[Total Price]</p>
+        </div>
+
+        <p>We value your business and would love the opportunity to serve you again. Please consider placing another order when it's convenient for you.</p>
+
+        <a href="https://api.whatsapp.com/send/?phone=36204489602&text&type=phone_number&app_absent=0" class="button">Contact Support</a>
+
+        <p>If you have any questions about this cancellation or your refund, please don't hesitate to reach out to our customer support team.</p>
+
+        <p>Thank you for your understanding.</p>
+        <p>Best regards,<br>The Pizza Point Team</p>
+    </div>
+    <div class="footer">
+        <p>© 2025 Pizza Point. All rights reserved.</p>
+        <p>
+            <a href="https://www.google.com/maps/dir//Debrecen,+Bajcsy-Zsilinszky+u.+2,+4025/@47.5299425,21.5413505,12z/data=!4m8!4m7!1m0!1m5!1m1!1s0x47470f3d86380899:0xfa6293ed61880b6!2m2!1d21.623751!2d47.529972?entry=ttu&g_ep=EgoyMDI1MDUyOC4wIKXMDSoASAFQAw%3D%3D" target="_blank">
+                Pizza Point, Debrecen, Bajcsy-Zsilinszky u. 2, 4025
+            </a> |
+            <a href="mailto:contact@pizzapoint.hu">
+                contact@pizzapoint.hu
+            </a> |
+            <a href="tel:+36204489602">
+                +36204489602
+            </a>
+        </p>
+    </div>
+</div>
+</body>
+</html>
