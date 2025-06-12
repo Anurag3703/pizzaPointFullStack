@@ -31,9 +31,12 @@
         }
 
         @GetMapping("/get/{id}")
-        public MenuItem getMenuItemById(@PathVariable String id) {
-            return menuItemServiceImpl.getMenuItemById(id) .orElseThrow(() -> new RuntimeException("MenuItem not found with ID: " + id));
+        public MenuItemDTO getMenuItemById(@PathVariable String id) {
+            MenuItem menuItem = menuItemServiceImpl.getMenuItemById(id)
+                    .orElseThrow(() -> new RuntimeException("MenuItem not found with ID: " + id));
+            return menuItemDTOServiceImpl.convertToDTO(menuItem);
         }
+
 
         @PutMapping ("/update/{menuItemId}")
         public ResponseEntity<?> updateMenuItem(@PathVariable String menuItemId, @RequestBody MenuItem menuItem) {
