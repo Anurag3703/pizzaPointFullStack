@@ -32,12 +32,11 @@ public class AddressController {
         List<Address> addresses = addressServiceImpl.getAllAddresses();
 
 
-        List<AddressDTO> addressDTOs = addresses.stream()
+        return addresses.stream()
                 .map(addressDTOServiceImpl::convertDTO)
-                .collect(Collectors.toList());
-
-        return addressDTOs;  // Return the list of AddressDTOs
+                .collect(Collectors.toList());  // Return the list of AddressDTOs
     }
+
 
 
     @GetMapping("/selected")

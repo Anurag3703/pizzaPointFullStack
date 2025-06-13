@@ -52,6 +52,8 @@ public class Orders {
     // ADDED: Constant for per-bottle deposit fee
     private static final BigDecimal PER_BOTTLE_DEPOSIT_FEE = BigDecimal.valueOf(50);
 
+    private String transactionId;
+
     @PrePersist
     public void generateId() {
         if (orderId == null) {

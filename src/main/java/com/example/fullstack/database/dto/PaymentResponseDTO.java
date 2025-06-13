@@ -11,4 +11,8 @@ import lombok.NoArgsConstructor;
 public class PaymentResponseDTO {
     private String status;
     private String message;
+    private String transactionId;
+
+    public PaymentResponseDTO(String failed, String paymentProcessingFailed) {
+    }
 }

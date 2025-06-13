@@ -22,6 +22,8 @@ public class Meal {
     @OneToMany
     private List<MenuItem> menuItems;
     private BigDecimal price;
+    private String description;
+    private String imageUrl;
 
 
 

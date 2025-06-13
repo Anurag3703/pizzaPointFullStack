@@ -74,7 +74,7 @@ public class EntryController {
            User user = userSecurity.getUser();
            cartServiceImpl.transferGuestCartToUser(session, user);
            String token = jwtTokenUtil.generateToken(userSecurity);
-           return ResponseEntity.ok(new AuthResponse(token, user.getEmail()));
+           return ResponseEntity.ok(new AuthResponse(token, user.getEmail(),userSecurity.getUser().getName()));
        }
        catch (BadCredentialsException e) {
            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
@@ -127,7 +127,7 @@ public class EntryController {
             Authentication authenticated = authenticationManager.authenticate(authentication);
             // Token
             String token = jwtTokenUtil.generateToken((UserSecurity) authenticated.getPrincipal());
-            return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponse(token, userSecurity.getEmail()));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponse(token, userSecurity.getEmail(),userSecurity.getUser().getName()));
 
         }catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during signup. Please try again later.");
@@ -335,7 +335,7 @@ public class EntryController {
             String token = jwtTokenUtil.generateToken(userSecurity);
             System.out.println(("OTP verified successfully for admin: " + userSecurity.getEmail()));
 
-            return ResponseEntity.ok(new AuthResponse(token, userSecurity.getEmail()));
+            return ResponseEntity.ok(new AuthResponse(token, userSecurity.getEmail(),userSecurity.getUser().getName()));
         } catch (Exception e) {
             System.out.println(("Error during OTP verification" + e));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error During Verify Otp: " + e.getMessage());

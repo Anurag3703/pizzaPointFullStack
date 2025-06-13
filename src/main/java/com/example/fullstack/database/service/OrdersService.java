@@ -19,9 +19,9 @@ public interface OrdersService {
     List<Orders> getAllOrders();
     List<Orders> getOrdersByUser(String userId);
 
-
+    Orders retryPayment(String orderId, String cardToken);
     Orders  getOrderById(String orderId);
-    Orders confirmCheckout(String orderId, PaymentMethod paymentMethod, OrderType orderType);
+    Orders confirmCheckout(String orderId, PaymentMethod paymentMethod, OrderType orderType, String cardToken);
     void deletePendingOrders();
 
 }

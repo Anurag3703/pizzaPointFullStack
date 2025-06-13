@@ -7,9 +7,11 @@ import com.example.fullstack.database.service.implementation.OrderItemServiceImp
 import com.example.fullstack.database.service.implementation.OrdersServiceImpl;
 import com.example.fullstack.database.service.implementation.WhatsAppService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -132,26 +134,51 @@ public class OrdersController {
     public ResponseEntity<?> placeOrder(@RequestParam String orderId ,
                                         @RequestParam PaymentMethod paymentMethod,
                                         @RequestParam OrderType orderType,
+                                        @RequestParam(required = false) String cardToken,
                                          HttpSession session) {
 
         try {
+            if (paymentMethod == PaymentMethod.CREDIT_CARD && (cardToken == null || cardToken.trim().isEmpty())) {
+                return ResponseEntity.badRequest().body(new ErrorResponse("Card token is required for card payments"));
+            }
 
-
-            Orders order = ordersServiceImpl.confirmCheckout(orderId,paymentMethod, orderType);
+            Orders order = ordersServiceImpl.confirmCheckout(orderId, paymentMethod, orderType, cardToken);
             OrderDTO responseDTO = orderDTOServiceImpl.convertToDTO(order);
-            messagingTemplate.convertAndSend("/topic/orders/" + order.getOrderId(), "Your order has been placed");
+
+            messagingTemplate.convertAndSend("/topic/orders/" + order.getOrderId(), "Your order has been placed successfully!");
             messagingTemplate.convertAndSend("/topic/admin", "New order received: " + order.getOrderId());
+
             if (responseDTO.getStatus() == Status.PLACED) {
                 whatsAppService.sendNewOrderNotification(order);
             }
 
+            return ResponseEntity.ok(responseDTO);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        }
+    }
 
-            System.out.println("WebSocket message sent for order ID: " + order.getOrderId());
 
+    @PostMapping("/retry-payment")
+    public ResponseEntity<?> retryPayment(@RequestParam String orderId, @RequestParam String cardToken) {
+        try {
+            if (cardToken == null || cardToken.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(new ErrorResponse("Card token is required for payment retry"));
+            }
+
+            Orders order = ordersServiceImpl.retryPayment(orderId, cardToken);
+            OrderDTO responseDTO = orderDTOServiceImpl.convertToDTO(order);
+
+            messagingTemplate.convertAndSend("/topic/orders/" + order.getOrderId(), "Your order has been placed successfully!");
+            messagingTemplate.convertAndSend("/topic/admin", "New order received: " + order.getOrderId());
+
+            if (responseDTO.getStatus() == Status.PLACED) {
+                whatsAppService.sendNewOrderNotification(order);
+            }
 
             return ResponseEntity.ok(responseDTO);
-        }catch (Exception e){
-            return ResponseEntity.badRequest().body("Error during place order: " + e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         }
 
 
@@ -181,6 +208,23 @@ public class OrdersController {
             return ResponseEntity.badRequest().body("Error during deletePendingOrders: " + e.getMessage());
         }
     }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        String errorMessage = ex.getBindingResult().getAllErrors().stream()
+                .map(error -> error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        return ResponseEntity.badRequest().body(new ErrorResponse(errorMessage));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGeneralExceptions(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("An unexpected error occurred: " + ex.getMessage()));
+    }
+
+    // Error response class for consistent error handling
+    public record ErrorResponse(String message) {}
 
 }
 

@@ -1,6 +1,7 @@
     package com.example.fullstack.database.service.implementation;
 
     import com.example.fullstack.config.OrderSequenceUtil;
+    import com.example.fullstack.database.dto.PaymentResponseDTO;
     import com.example.fullstack.database.model.*;
     import com.example.fullstack.database.repository.*;
     import com.example.fullstack.database.service.OrdersService;
@@ -24,6 +25,7 @@
          private final UserRepository userRepository;
          private final AddressRepository addressRepository;
          private final OrderSequenceUtil orderSequenceUtil;
+         private final PaymentServiceImpl paymentServiceImpl ;
 
 
 
@@ -32,13 +34,14 @@
                 , MenuItemRepository menuItemRepository
                 , UserRepository userRepository
                 , AddressRepository addressRepository
-                , OrderSequenceUtil orderSequenceUtil) {
+                , OrderSequenceUtil orderSequenceUtil,PaymentServiceImpl paymentServiceImpl) {
             this.ordersRepository = ordersRepository;
             this.cartRepository = cartRepository;
             this.userRepository = userRepository;
             this.addressRepository = addressRepository;
             this.orderSequenceUtil = orderSequenceUtil;
             this.orderItemRepository = orderItemRepository;
+            this.paymentServiceImpl = paymentServiceImpl;
         }
 
 
@@ -69,6 +72,14 @@
         @Override
         public void updateOrderStatus(String orderId, Status status) {
             Orders order = ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found" + orderId));
+
+            if (status == Status.CANCELLED && order.getTransactionId() != null && order.getStatus() == Status.PLACED) {
+                PaymentResponseDTO refundResponse = paymentServiceImpl.refundPayment(order.getTransactionId(), order.getTotalPrice());
+                if (!"COMPLETED".equals(refundResponse.getStatus())) {
+                    throw new RuntimeException("Failed to refund payment: " + refundResponse.getMessage());
+                }
+                order.setTransactionId(null); // Clear transactionId after refund
+            }
 
             order.setStatus(status);
             ordersRepository.save(order);
@@ -177,6 +188,12 @@
             }
         }
 
+        @Override
+        @Transactional
+        public Orders retryPayment(String orderId, String cardToken) {
+            return confirmCheckout(orderId, PaymentMethod.CREDIT_CARD, null, cardToken);
+        }
+
 
         private BigDecimal calculateTotalPrice(List<OrderItem> orderItems,BigDecimal deliveryFee, BigDecimal serviceFee,BigDecimal totalBottleDepositFee) {
             //All the cart Items
@@ -193,7 +210,7 @@
 
         @Override
         @Transactional
-        public Orders confirmCheckout(String orderId, PaymentMethod paymentMethod, OrderType orderType) {
+        public Orders confirmCheckout(String orderId, PaymentMethod paymentMethod, OrderType orderType,String cardToken) {
             UserSecurity userSecurity = (UserSecurity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             User currentUser = getUserFromUserSecurity(userSecurity);
 
@@ -226,12 +243,14 @@
             pendingOrder.setStatus(paymentMethod == PaymentMethod.CASH ? Status.PLACED : Status.PENDING);
             pendingOrder.setUpdatedAt(LocalDateTime.now());
 
-            // Set fees
-            pendingOrder.setDeliveryFee(BigDecimal.valueOf(400));
-            pendingOrder.setServiceFee(pendingOrder.getServiceFee()); // Keep existing service fee
-
-            // Calculate and set bottle deposit fee
+            // Set fees based on order type
+            BigDecimal deliveryFee = (orderType == OrderType.DELIVERY) ? BigDecimal.valueOf(400) : BigDecimal.ZERO;
+            BigDecimal serviceFee = pendingOrder.getServiceFee(); // Keep existing service fee
             BigDecimal bottleDepositFee = pendingOrder.getTotalBottleDepositFee();
+
+            // Set individual fees
+            pendingOrder.setDeliveryFee(deliveryFee);
+            pendingOrder.setServiceFee(serviceFee);
             pendingOrder.setBottleDepositFee(bottleDepositFee);
 
             // Calculate cart amount (items only, without fees)
@@ -240,13 +259,37 @@
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             pendingOrder.setTotalCartAmount(cartAmount);
 
-            // Recalculate total price properly
-            BigDecimal totalPrice = cartAmount
-                    .add(pendingOrder.getDeliveryFee())
-                    .add(pendingOrder.getServiceFee() != null ? pendingOrder.getServiceFee() : BigDecimal.ZERO)
-                    .add(bottleDepositFee);
-
+            // Calculate total price using the new method
+            BigDecimal totalPrice = calculateTotalPriceBasedOnOrderType(
+                    pendingOrder.getOrderItems(),
+                    orderType,
+                    deliveryFee,
+                    serviceFee,
+                    bottleDepositFee
+            );
             pendingOrder.setTotalPrice(totalPrice);
+            // Handle payment processing
+            if (paymentMethod == PaymentMethod.CREDIT_CARD) {
+                if (cardToken == null || cardToken.trim().isEmpty()) {
+                    throw new RuntimeException("Card token is required for card payments");
+                }
+
+                // Refund previous successful payment if retrying
+                if (pendingOrder.getTransactionId() != null) {
+                    PaymentResponseDTO refundResponse = paymentServiceImpl.refundPayment(pendingOrder.getTransactionId(), totalPrice);
+                    if (!"COMPLETED".equals(refundResponse.getStatus())) {
+                        throw new RuntimeException("Failed to refund previous payment: " + refundResponse.getMessage());
+                    }
+                    pendingOrder.setTransactionId(null);
+                }
+
+                PaymentResponseDTO paymentResponse = paymentServiceImpl.chargeCard(cardToken, totalPrice);
+                if (!"COMPLETED".equals(paymentResponse.getStatus())) {
+                    throw new RuntimeException("Payment failed: " + paymentResponse.getMessage());
+                }
+                pendingOrder.setTransactionId(paymentResponse.getTransactionId()); // Store Revolut orderId
+            }
+
 
             Orders confirmedOrder = ordersRepository.save(pendingOrder);
 
@@ -257,6 +300,7 @@
 
             return confirmedOrder;
         }
+
 
         @Override
         public void deletePendingOrders() {
@@ -301,7 +345,7 @@
 
 
 //        public void updateItemsFromCart(List<CartItem> cartItems) {
-//            //        this.orderItems.clear();  // remove old items and trigger orphanRemoval
+//            //        this.orderItems.clear();     // remove old items and trigger orphanRemoval
 //            //
 //            //        for (CartItem cartItem : cartItems) {
 //            //            OrderItem orderItem = new OrderItem();
@@ -316,5 +360,29 @@
 //            //        // Optionally set total price here or let service do it
 //            //        this.totalPrice = this.getTotalPrice();
 //            //    }
+
+
+        private BigDecimal calculateTotalPriceBasedOnOrderType(List<OrderItem> orderItems,OrderType orderType,BigDecimal deliveryFee, BigDecimal serviceFee,BigDecimal totalBottleDepositFee) {
+            BigDecimal cartAmount = orderItems.stream()
+                    .map(item -> item.getPricePerItem().multiply(BigDecimal.valueOf(item.getQuantity())))
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalPrice = cartAmount;
+
+            switch(orderType){
+                case DELIVERY:
+                    totalPrice = cartAmount.add(deliveryFee != null ? deliveryFee : BigDecimal.ZERO);
+                case PICKUP:
+                case DINE_IN:
+                    break;
+                    default:
+                    throw new IllegalArgumentException("Unsupported order type: " + orderType);
+            }
+
+            totalPrice = totalPrice.add(serviceFee != null ? serviceFee : BigDecimal.ZERO);
+
+            totalPrice = totalPrice.add(totalBottleDepositFee != null ? totalBottleDepositFee : BigDecimal.ZERO);
+
+            return totalPrice;
+        }
 
     }
