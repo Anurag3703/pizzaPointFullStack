@@ -13,4 +13,8 @@ import java.math.BigDecimal;
 public class PaymentRequestDTO {
     private String cardToken;
     private BigDecimal amount;
+    private String description;
+    private String orderId;
+    private String currency = "HUF";
+
 }
