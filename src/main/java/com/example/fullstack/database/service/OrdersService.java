@@ -15,10 +15,10 @@ public interface OrdersService {
     List<Orders> addAllOrders(List<Orders> orders);
     void updateOrder(Orders order);
     void updateOrderStatus(String orderId, Status status);
-    Orders  processCheckout();
+    Orders  processCheckoutWithDelivery();
     List<Orders> getAllOrders();
     List<Orders> getOrdersByUser(String userId);
-
+    Orders processCheckoutWithPickup();
     Orders retryPayment(String orderId, String cardToken);
     Orders  getOrderById(String orderId);
     Orders confirmCheckout(String orderId, PaymentMethod paymentMethod, OrderType orderType, String cardToken);

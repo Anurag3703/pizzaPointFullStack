@@ -93,10 +93,10 @@ public class OrdersController {
 
 
     @PostMapping("/checkout")
-    public ResponseEntity<?> checkout() {
+    public ResponseEntity<?> deliveryCheckout() {
         try {
             // Call the service to process the checkout
-            Orders order = ordersServiceImpl.processCheckout();
+            Orders order = ordersServiceImpl.processCheckoutWithDelivery();
             OrderDTO orderDTO = orderDTOServiceImpl.convertToDTO(order);
 
 
@@ -225,6 +225,17 @@ public class OrdersController {
 
     // Error response class for consistent error handling
     public record ErrorResponse(String message) {}
+    @PostMapping("/pickup-checkout")
+    public ResponseEntity<?> pickupCheckout() {
+        try {
+            Orders order = ordersServiceImpl.processCheckoutWithPickup();
+            OrderDTO orderDTO = orderDTOServiceImpl.convertToDTO(order);
+            return ResponseEntity.ok(orderDTO);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("Error during pickup checkout: " + e.getMessage()));
+        }
+    }
+
 
 }
 

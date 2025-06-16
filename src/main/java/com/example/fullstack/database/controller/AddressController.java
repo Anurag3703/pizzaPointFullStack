@@ -1,6 +1,8 @@
 package com.example.fullstack.database.controller;
 
 import com.example.fullstack.database.dto.AddressDTO;
+import com.example.fullstack.database.dto.AddressValidationRequestDTO;
+import com.example.fullstack.database.dto.AddressValidationResponseDTO;
 import com.example.fullstack.database.dto.service.implementation.AddressDTOServiceImpl;
 import com.example.fullstack.database.model.Address;
 import com.example.fullstack.database.service.implementation.AddressServiceImpl;
@@ -78,5 +80,13 @@ public class AddressController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
+    }
+
+
+    @PostMapping("/validate")
+    public ResponseEntity<AddressValidationResponseDTO> validateAddress(@RequestBody AddressValidationRequestDTO request) {
+        AddressValidationResponseDTO result = addressServiceImpl.validateAddress(request);
+        return ResponseEntity.ok(result);
+
     }
 }

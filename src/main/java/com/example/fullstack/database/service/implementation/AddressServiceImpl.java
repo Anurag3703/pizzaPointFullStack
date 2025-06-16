@@ -1,24 +1,35 @@
 package com.example.fullstack.database.service.implementation;
 
+import com.example.fullstack.database.dto.AddressValidationRequestDTO;
+import com.example.fullstack.database.dto.AddressValidationResponseDTO;
 import com.example.fullstack.database.model.Address;
 import com.example.fullstack.database.model.User;
 import com.example.fullstack.database.repository.AddressRepository;
 import com.example.fullstack.database.repository.UserRepository;
 import com.example.fullstack.database.service.AddressService;
 import com.example.fullstack.database.service.UserService;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
+
 public class AddressServiceImpl implements AddressService {
 
 
     private final AddressRepository addressRepository;
     private final UserService userService;
     private final UserRepository userRepository;
+    @Value("${google.api.key}")
+    private String googleApiKey;
+    private static final double STORE_LAT = 47.529989;
+    private static final double STORE_LNG = 21.623746;
     public AddressServiceImpl(AddressRepository addressRepository, UserService userService,UserRepository userRepository) {
         this.addressRepository = addressRepository;
         this.userService = userService;
@@ -132,6 +143,43 @@ public class AddressServiceImpl implements AddressService {
         // set
         addressToSelect.setSelected(true);
         addressRepository.save(addressToSelect);
+
+    }
+
+    @Override
+    public AddressValidationResponseDTO validateAddress(AddressValidationRequestDTO request) {
+        try {
+            String origin = STORE_LAT + "," + STORE_LNG;
+            String destination = request.getLatitude() + "," + request.getLongitude();
+
+            String url = "https://maps.googleapis.com/maps/api/distancematrix/json" +
+                    "?origins=" + origin +
+                    "&destinations=" + destination +
+                    "&key=" + googleApiKey;
+
+            RestTemplate restTemplate = new RestTemplate();
+            Map response = restTemplate.getForObject(url, Map.class);
+
+            if (response != null && response.containsKey("rows")) {
+                List rows = (List) response.get("rows");
+                if (!rows.isEmpty()) {
+                    Map row = (Map) rows.get(0);
+                    List elements = (List) row.get("elements");
+                    if (!elements.isEmpty()) {
+                        Map element = (Map) elements.get(0);
+                        Map distance = (Map) element.get("distance");
+                        if (distance != null && distance.containsKey("value")) {
+                            int meters = (int) distance.get("value");
+                            return new AddressValidationResponseDTO(meters <= 5000);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return new AddressValidationResponseDTO(false);
 
     }
 }
