@@ -13,4 +13,5 @@ public interface SecurityUserRepository extends JpaRepository<UserSecurity, Long
     Optional<UserSecurity> findByPhone(String phone);
     Optional<UserSecurity> findByResetToken(String resetToken);
     void deleteByResetToken(String resetToken);
+
 }

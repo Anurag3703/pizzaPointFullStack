@@ -17,7 +17,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,7 +27,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.SignatureException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,8 +49,10 @@ public class EntryController {
     private final ResetPasswordService  resetPasswordService;
 
 
+
     public EntryController(AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil, SecurityUserRepository securityUserRepository, PasswordEncoder passwordEncoder, UserRepository userRepository, CartServiceImpl cartServiceImpl, DeletedUserRepository deletedUserRepository
-    , SecurityEmailService emailService, OtpService otpService, ResetPasswordService resetPasswordService) {
+    , SecurityEmailService emailService, OtpService otpService, ResetPasswordService resetPasswordService
+    ) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenUtil = jwtTokenUtil;
         this.securityUserRepository = securityUserRepository;
@@ -368,6 +368,11 @@ public class EntryController {
         }
 
     }
+
+
+
+
+
 
 
 

@@ -1,5 +1,7 @@
 package com.example.fullstack.database.service;
 
+import com.example.fullstack.database.dto.AddressValidationRequestDTO;
+import com.example.fullstack.database.dto.AddressValidationResponseDTO;
 import com.example.fullstack.database.model.Address;
 import com.example.fullstack.database.model.User;
 
@@ -14,4 +16,5 @@ public interface AddressService {
     Address getAddressByUserAndIsSelected(User user, boolean isSelected);
     Address getAddressById(Long id);
     void setAddressAsSelected(Long addressId);
+    AddressValidationResponseDTO validateAddress(AddressValidationRequestDTO request);
 }
