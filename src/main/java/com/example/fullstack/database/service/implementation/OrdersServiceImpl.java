@@ -111,6 +111,9 @@ public class OrdersServiceImpl implements OrdersService {
         User user = getUserFromUserSecurity(userSecurity);
         Orders order = initializeOrder(user, OrderType.PICKUP);
 
+         //Clear address for pickup orders
+        order.setAddress(null);
+
         Cart cart = cartRepository.findByUser(user).stream()
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("No cart found for the user"));
@@ -137,6 +140,9 @@ public class OrdersServiceImpl implements OrdersService {
         if (existingOrder.isPresent()) {
             order = existingOrder.get();
             order.getOrderItems().clear();
+            // ✅ FIX: Update the order type and delivery fee for existing orders
+            order.setOrderType(orderType);
+            order.setDeliveryFee(orderType == OrderType.PICKUP ? BigDecimal.ZERO : BigDecimal.valueOf(400));
         } else {
             order = new Orders();
             order.setUser(user);
