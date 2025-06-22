@@ -39,7 +39,9 @@ public class  Cart {
 
     private LocalDateTime createdAt;
 
-
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    private List<CustomMeal> customMeals = new ArrayList<>();
     private BigDecimal totalPrice;
 
 
@@ -57,7 +59,25 @@ public class  Cart {
                 .map(CartItem::getTotalPrice)
                 .reduce(BigDecimal.ZERO,BigDecimal::add);
         BigDecimal deliveryFee = BigDecimal.valueOf(400);
-        this.totalPrice = cartTotalPrice.add(deliveryFee);
+        BigDecimal mealsTotal = customMeals.stream()
+                .map(CustomMeal::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        this.totalPrice = cartTotalPrice.add(deliveryFee).add(mealsTotal);
+    }
+    public boolean isEmpty() {
+        return (cartItems == null || cartItems.isEmpty()) &&
+                (customMeals == null || customMeals.isEmpty());
+    }
+
+    // Helper method to get total item count
+    public int getTotalItemCount() {
+        int itemCount = cartItems.stream()
+                .mapToInt(item -> item.getQuantity().intValue())
+                .sum();
+
+        int mealCount = customMeals.size(); // Each custom meal counts as 1
+
+        return itemCount + mealCount;
     }
 
     @Override

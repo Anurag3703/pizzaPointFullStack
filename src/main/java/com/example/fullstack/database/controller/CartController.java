@@ -1,10 +1,7 @@
 package com.example.fullstack.database.controller;
 
 import com.example.fullstack.config.ModelMapperConfig;
-import com.example.fullstack.database.dto.CartDTO;
-import com.example.fullstack.database.dto.CartItemDTO;
-import com.example.fullstack.database.dto.MenuItemDTO;
-import com.example.fullstack.database.dto.ExtraDTO;
+import com.example.fullstack.database.dto.*;
 import com.example.fullstack.database.dto.service.implementation.CartDTOServiceImpl;
 import com.example.fullstack.database.model.Cart;
 import com.example.fullstack.database.service.implementation.CartServiceImpl;
@@ -101,6 +98,22 @@ public class CartController {
                 .map(cartDTOServiceImpl::convertToDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(cartDTOs);
+    }
+
+
+    // Fixed meals endpoint
+    @PostMapping("/meals")
+    public ResponseEntity<String> addMealToCart(@RequestParam String mealTemplateId,
+                                                @RequestBody List<SelectedMealItemDTO> selectedItems) {
+        try {
+            log.info("Adding meal to cart - Template ID: {}, Items count: {}", mealTemplateId, selectedItems.size());
+            cartServiceImpl.addMealToCart(mealTemplateId, selectedItems);
+            return ResponseEntity.ok("Meal added to cart successfully");
+        } catch (Exception e) {
+            log.error("Error adding meal to cart: ", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error adding meal to cart: " + e.getMessage());
+        }
     }
 
 }

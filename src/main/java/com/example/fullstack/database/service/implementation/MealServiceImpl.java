@@ -1,6 +1,6 @@
 package com.example.fullstack.database.service.implementation;
 
-import com.example.fullstack.database.model.Meal;
+import com.example.fullstack.database.model.MealTemplate;
 import com.example.fullstack.database.model.MenuItem;
 import com.example.fullstack.database.repository.MealRepository;
 import com.example.fullstack.database.service.MealService;
@@ -14,28 +14,28 @@ public class MealServiceImpl implements MealService {
         this.mealRepository = mealRepository;
     }
     @Override
-    public void addMeal(Meal meal) {
+    public void addMeal(MealTemplate meal) {
         mealRepository.save(meal);
     }
 
     @Override
-    public void deleteMeal(Meal meal) {
+    public void deleteMeal(MealTemplate meal) {
 
     }
 
     @Override
-    public void updateMeal(Meal meal) {
+    public void updateMeal(MealTemplate meal) {
 
     }
 
     @Override
-    public List<Meal> getMeals() {
+    public List<MealTemplate> getMeals() {
         return List.of();
     }
 
     @Override
-    public Meal createServiceMeal(List<MenuItem> selectedItems) {
-        return new Meal("Custom Combo", selectedItems);
+    public MealTemplate createServiceMeal(List<MenuItem> selectedItems) {
+        return new MealTemplate();
     }
 
 

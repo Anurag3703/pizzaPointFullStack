@@ -14,4 +14,5 @@ public class CartDTO {
     private LocalDateTime createdAt;
     private BigDecimal totalPrice;
     private String sessionId;
+    private List<CustomMealDTO> customMeals;
 }
