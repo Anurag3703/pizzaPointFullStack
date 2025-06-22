@@ -1,5 +1,6 @@
 package com.example.fullstack.database.service;
 
+import com.example.fullstack.database.dto.SelectedMealItemDTO;
 import com.example.fullstack.database.model.Cart;
 import com.example.fullstack.database.model.CartItem;
 import com.example.fullstack.database.model.User;
@@ -20,7 +21,8 @@ public interface CartService {
     void transferGuestCartToUser(HttpSession session, User user);
     BigDecimal calculateCartItemTotalPrice(CartItem cartItem);
     BigDecimal calculateCartTotalPrice(Cart cart);
-
+    void addMealToCart(String mealTemplateId, List<SelectedMealItemDTO> selectedItems);
+    void updateMealQuantity(String customMealId, Integer quantity);
 
     Cart getCurrentUserCart();
     //Cart getCartByUser(User user);

@@ -1,15 +1,15 @@
 package com.example.fullstack.database.service;
 
-import com.example.fullstack.database.model.Meal;
+import com.example.fullstack.database.model.MealTemplate;
 import com.example.fullstack.database.model.MenuItem;
 
 import java.util.List;
 
 public interface MealService {
-    void addMeal(Meal meal);
-    void deleteMeal(Meal meal);
-    void updateMeal(Meal meal);
-    List<Meal> getMeals();
-    Meal createServiceMeal(List<MenuItem> selectedItems);
+    void addMeal(MealTemplate meal);
+    void deleteMeal(MealTemplate meal);
+    void updateMeal(MealTemplate meal);
+    List<MealTemplate> getMeals();
+    MealTemplate createServiceMeal(List<MenuItem> selectedItems);
 
 }

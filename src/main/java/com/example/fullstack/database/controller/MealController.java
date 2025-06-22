@@ -1,6 +1,6 @@
 package com.example.fullstack.database.controller;
 
-import com.example.fullstack.database.model.Meal;
+import com.example.fullstack.database.model.MealTemplate;
 import com.example.fullstack.database.model.MenuItem;
 import com.example.fullstack.database.service.implementation.MealServiceImpl;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +23,7 @@ public class MealController {
     }
 
     @PostMapping("/create")
-    public Meal createMeal(@RequestBody List<MenuItem> selectedMenuItems) {
+    public MealTemplate createMeal(@RequestBody List<MenuItem> selectedMenuItems) {
         return mealServiceImpl.createServiceMeal(selectedMenuItems);
 
     }
