@@ -228,21 +228,17 @@ public class OrdersServiceImpl implements OrdersService {
     public List<Orders> getOrdersByUser(String email) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!(principal instanceof UserSecurity)) {
-            throw new RuntimeException("User must be logged in to view order history");
+            throw new RuntimeException("User must be logged in to checkout");
         }
 
         UserSecurity userSecurity = (UserSecurity) principal;
         User user = getUserFromUserSecurity(userSecurity);
-
-        // Verify the email matches the authenticated user
-        if (!user.getEmail().equals(email)) {
-            throw new RuntimeException("Unauthorized access to order history");
-        }
-
         List<Orders> orders = ordersRepository.findByUserEmailAndStatusNotOrderByCreatedAtDesc(email, Status.PENDING);
 
-        // Don't throw exception for empty orders - return empty list instead
-        return orders; // This will be an empty list if no orders found
+        if (orders.isEmpty()) {
+            throw new RuntimeException("Customer has no orders");
+        }
+        return orders;
     }
 
     @Override
