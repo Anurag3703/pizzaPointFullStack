@@ -12,6 +12,7 @@ import com.example.fullstack.security.service.ResetPasswordService;
 import com.example.fullstack.security.service.SecurityEmailService;
 import com.example.fullstack.security.util.JwtTokenUtil;
 import io.jsonwebtoken.ExpiredJwtException;
+import org.springframework.transaction.annotation.Transactional;
 import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
