@@ -33,7 +33,7 @@ public class OrderItem {
     @JoinColumn(name = "custom_meal_id")
     private CustomMeal customMeal;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "order_item_extras", // Join table name
             joinColumns = @JoinColumn(name = "order_item_id"),
