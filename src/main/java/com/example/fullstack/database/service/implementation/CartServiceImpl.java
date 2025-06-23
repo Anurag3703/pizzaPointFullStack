@@ -5,12 +5,14 @@ import com.example.fullstack.database.model.*;
 import com.example.fullstack.database.repository.*;
 import com.example.fullstack.database.service.CartService;
 import com.example.fullstack.database.service.UserService;
+import com.example.fullstack.security.model.UserSecurity;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -32,11 +34,13 @@ public class CartServiceImpl implements CartService {
     private final MealTemplateRepository mealTemplateRepository;
     private final CustomMealRepository customMealRepository;
     private final SelectedMealItemRepository selectedMealItemRepository;
+    private final UserRepository userRepository;
 
     @Autowired
     public CartServiceImpl(CartRepository cartRepository, ExtraRepository extraRepository,
                            UserService userService, MenuItemRepository menuItemRepository, CartItemRepository cartItemRepository
-    ,MealTemplateRepository mealTemplateRepository,CustomMealRepository customMealRepository,SelectedMealItemRepository selectedMealItemRepository) {
+    ,MealTemplateRepository mealTemplateRepository,CustomMealRepository customMealRepository,SelectedMealItemRepository selectedMealItemRepository
+    ,UserRepository userRepository) {
         this.cartRepository = cartRepository;
         this.extraRepository = extraRepository;
         this.userService = userService;
@@ -45,7 +49,9 @@ public class CartServiceImpl implements CartService {
         this.mealTemplateRepository = mealTemplateRepository;
         this.customMealRepository = customMealRepository;
         this.selectedMealItemRepository = selectedMealItemRepository;
+        this.userRepository = userRepository;
     }
+
 
     @Override
     @Transactional
@@ -172,7 +178,8 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public List<Cart> getCartByUserEmail(String email) {
-        User user = userService.getCurrentUser();
+        UserSecurity userSecurity = (UserSecurity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = getUserFromUserSecurity(userSecurity);
 
         // Optional: Validate that the requested email matches the current user
         if (email != null && !email.isEmpty() && !email.equals(user.getEmail())) {
@@ -180,6 +187,11 @@ public class CartServiceImpl implements CartService {
         }
 
         return cartRepository.findByUserEmail(user.getEmail());
+    }
+
+    private User getUserFromUserSecurity(UserSecurity userSecurity) {
+        return userRepository.findByEmail(userSecurity.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     @Override
