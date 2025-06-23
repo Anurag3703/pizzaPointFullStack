@@ -4,6 +4,7 @@ import com.example.fullstack.database.model.RestaurantInfo;
 import com.example.fullstack.database.service.implementation.RestaurantInfoServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,6 +22,7 @@ public class RestaurantInfoController {
         return "Restaurant Info Added Successfully";
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{restaurantId}/status")
     public ResponseEntity<String> updateRestaurantStatus(
             @PathVariable int restaurantId,
