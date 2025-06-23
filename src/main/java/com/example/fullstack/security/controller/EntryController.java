@@ -82,6 +82,7 @@ public class EntryController {
     }
 
     @PostMapping("/signup")
+    @Transactional
     public ResponseEntity<?> signup(@RequestBody SignupRequest signupRequest) {
         try {
 
