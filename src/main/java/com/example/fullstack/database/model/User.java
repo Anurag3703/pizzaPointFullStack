@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -34,7 +35,8 @@ public class User {
     @JoinColumn(name = "user_security_id")
     private UserSecurity userSecurity;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Orders> orders;
+    @JsonIgnore
+    private List<Orders> orders = new ArrayList<>();
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Review> reviews;
 
