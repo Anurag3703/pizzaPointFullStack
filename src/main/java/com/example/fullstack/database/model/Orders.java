@@ -2,6 +2,8 @@ package com.example.fullstack.database.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,6 +39,7 @@ public class Orders {
     private PaymentMethod paymentMethod;
     private BigDecimal deliveryFee;
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 10)
     private List<OrderItem> orderItems = new ArrayList<>();
     private BigDecimal totalCartAmount;
 

@@ -193,12 +193,12 @@ public class OrdersController {
         try {
             List<Orders> orders = ordersServiceImpl.getOrdersByUser(email);
 
-            // Return empty list with 200 status instead of error
-            if (orders.isEmpty()) {
-                return ResponseEntity.ok(Collections.emptyList());
-            }
+            // Convert to DTOs
+            List<OrderDTO> dtoList = orders.stream()
+                    .map(orderDTOServiceImpl::convertToDTO)
+                    .collect(Collectors.toList());
 
-            return ResponseEntity.ok(orders);
+            return ResponseEntity.ok(dtoList);
         } catch (Exception e) {
             // Log the error for debugging
             System.err.println("Error fetching orders for user " + email + ": " + e.getMessage());
@@ -208,6 +208,7 @@ public class OrdersController {
                     .body(Map.of("error", "Failed to fetch orders", "message", e.getMessage()));
         }
     }
+
 
 
     @DeleteMapping("/delete-pending-orders")
