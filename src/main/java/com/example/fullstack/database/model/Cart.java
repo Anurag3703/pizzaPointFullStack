@@ -39,7 +39,7 @@ public class  Cart {
 
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @ToString.Exclude
     private List<CustomMeal> customMeals = new ArrayList<>();
     private BigDecimal totalPrice;

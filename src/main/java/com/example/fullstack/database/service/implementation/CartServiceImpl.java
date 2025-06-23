@@ -177,6 +177,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional
     public List<Cart> getCartByUserEmail(String email) {
         UserSecurity userSecurity = (UserSecurity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = getUserFromUserSecurity(userSecurity);
