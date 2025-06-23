@@ -232,7 +232,7 @@ public class OrdersController {
             OrderDTO orderDTO = orderDTOServiceImpl.convertToDTO(order);
             return ResponseEntity.ok(orderDTO);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ErrorResponse("Error during pickup checkout: " + e.getMessage()));
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         }
     }
 

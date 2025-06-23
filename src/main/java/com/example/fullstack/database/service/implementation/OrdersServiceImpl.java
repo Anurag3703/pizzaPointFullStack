@@ -25,11 +25,12 @@ public class OrdersServiceImpl implements OrdersService {
     private final AddressRepository addressRepository;
     private final OrderSequenceUtil orderSequenceUtil;
     private final PaymentServiceImpl paymentServiceImpl;
+    private final RestaurantInfoRepository restaurantInfoRepository;
 
     public OrdersServiceImpl(OrdersRepository ordersRepository, OrderItemRepository orderItemRepository,
                              CartRepository cartRepository, MenuItemRepository menuItemRepository,
                              UserRepository userRepository, AddressRepository addressRepository,
-                             OrderSequenceUtil orderSequenceUtil, PaymentServiceImpl paymentServiceImpl) {
+                             OrderSequenceUtil orderSequenceUtil, PaymentServiceImpl paymentServiceImpl, RestaurantInfoRepository restaurantInfoRepository) {
         this.ordersRepository = ordersRepository;
         this.cartRepository = cartRepository;
         this.userRepository = userRepository;
@@ -37,6 +38,7 @@ public class OrdersServiceImpl implements OrdersService {
         this.orderSequenceUtil = orderSequenceUtil;
         this.orderItemRepository = orderItemRepository;
         this.paymentServiceImpl = paymentServiceImpl;
+        this.restaurantInfoRepository = restaurantInfoRepository;
     }
 
     @Override
@@ -82,6 +84,7 @@ public class OrdersServiceImpl implements OrdersService {
     @Override
     @Transactional
     public Orders processCheckoutWithDelivery() {
+        checkIfRestaurantIsOpen();
         UserSecurity userSecurity = (UserSecurity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = getUserFromUserSecurity(userSecurity);
         Orders order = initializeOrder(user, OrderType.DELIVERY);
@@ -91,6 +94,8 @@ public class OrdersServiceImpl implements OrdersService {
             throw new RuntimeException("No selected address found for delivery");
         }
         order.setAddress(selectedAddress);
+
+
 
         Cart cart = cartRepository.findByUser(user).stream()
                 .findFirst()
@@ -107,6 +112,7 @@ public class OrdersServiceImpl implements OrdersService {
     @Override
     @Transactional
     public Orders processCheckoutWithPickup() {
+        checkIfRestaurantIsOpen();
         UserSecurity userSecurity = (UserSecurity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = getUserFromUserSecurity(userSecurity);
         Orders order = initializeOrder(user, OrderType.PICKUP);
@@ -230,6 +236,7 @@ public class OrdersServiceImpl implements OrdersService {
     @Override
     @Transactional
     public Orders confirmCheckout(String orderId, PaymentMethod paymentMethod, OrderType orderType, String cardToken) {
+        checkIfRestaurantIsOpen();
         UserSecurity userSecurity = (UserSecurity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User currentUser = getUserFromUserSecurity(userSecurity);
 
@@ -371,5 +378,15 @@ public class OrdersServiceImpl implements OrdersService {
                 .add(totalBottleDepositFee != null ? totalBottleDepositFee : BigDecimal.ZERO);
 
         return totalPrice;
+    }
+
+
+    public void checkIfRestaurantIsOpen(){
+        RestaurantInfo restaurantInfo = restaurantInfoRepository.findAll().stream().findFirst()
+                .orElseThrow(() -> new RuntimeException("No restaurant found"));
+
+        if(!restaurantInfo.isOpen()){
+            throw  new IllegalStateException("Sorry! The restaurant is currently closed and not accepting new orders.");
+        }
     }
 }
