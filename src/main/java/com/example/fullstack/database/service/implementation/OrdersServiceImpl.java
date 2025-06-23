@@ -228,16 +228,35 @@ public class OrdersServiceImpl implements OrdersService {
     public List<Orders> getOrdersByUser(String email) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!(principal instanceof UserSecurity)) {
-            throw new RuntimeException("User must be logged in to checkout");
+            throw new RuntimeException("User must be logged in to view orders");
         }
 
         UserSecurity userSecurity = (UserSecurity) principal;
         User user = getUserFromUserSecurity(userSecurity);
-        List<Orders> orders = ordersRepository.findByUserEmailAndStatusNotOrderByCreatedAtDesc(email, Status.PENDING);
 
-        // ✅ FIX: Return empty list instead of throwing exception
-        // This prevents the 400 error when user has no orders
-        return orders; // Will return empty list if no orders found
+        // Step 1: Fetch orders with user and address data
+        List<Orders> orders = ordersRepository.findByUserEmailAndStatusNotWithFetchOrderByCreatedAtDesc(
+                email,
+                Status.PENDING
+        );
+
+        if (orders.isEmpty()) {
+            return orders;
+        }
+
+        // Step 2: Manually trigger lazy loading for orderItems and their extras
+        // This approach uses the @Transactional annotation to keep the session open
+        for (Orders order : orders) {
+            // Force loading of orderItems
+            order.getOrderItems().size();
+
+            // Force loading of extras for each order item
+            for (OrderItem item : order.getOrderItems()) {
+                item.getExtras().size(); // This will trigger lazy loading
+            }
+        }
+
+        return orders;
     }
 
     @Override

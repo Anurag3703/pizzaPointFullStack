@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -33,12 +34,13 @@ public class OrderItem {
     @JoinColumn(name = "custom_meal_id")
     private CustomMeal customMeal;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "order_item_extras", // Join table name
             joinColumns = @JoinColumn(name = "order_item_id"),
             inverseJoinColumns = @JoinColumn(name = "extra_id")
     )
+    @BatchSize(size = 10)
     private List<Extra> extras = new ArrayList<>();
 
 
