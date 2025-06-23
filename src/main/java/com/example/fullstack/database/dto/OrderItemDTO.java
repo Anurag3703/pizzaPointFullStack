@@ -14,4 +14,6 @@ public class OrderItemDTO {
     private String menuItemId;
     private List<ExtraDTO> extras;
     private String orderMenuItemName;
+    private String itemType; // "MENU_ITEM" or "CUSTOM_MEAL"
+    private CustomMealDTO customMeal;
 }

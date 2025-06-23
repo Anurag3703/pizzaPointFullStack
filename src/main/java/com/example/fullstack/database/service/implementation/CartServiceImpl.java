@@ -172,7 +172,14 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public List<Cart> getCartByUserEmail(String email) {
-        return cartRepository.findByUserEmail(email);
+        User user = userService.getCurrentUser();
+
+        // Optional: Validate that the requested email matches the current user
+        if (email != null && !email.isEmpty() && !email.equals(user.getEmail())) {
+            throw new RuntimeException("Access denied: Cannot access another user's cart");
+        }
+
+        return cartRepository.findByUserEmail(user.getEmail());
     }
 
     @Override
