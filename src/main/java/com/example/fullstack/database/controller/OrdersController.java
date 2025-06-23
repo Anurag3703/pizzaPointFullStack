@@ -191,11 +191,19 @@ public class OrdersController {
             List<OrderDTO> dto = orderHistory.stream()
                     .map(orderDTOServiceImpl::convertToDTO)
                     .toList();
-            return ResponseEntity.ok(dto);
-        }catch (Exception e){
-            return ResponseEntity.badRequest().body("Error during getOrderHistory: " + e.getMessage());
-        }
 
+            // Return empty list instead of error when no orders
+            return ResponseEntity.ok(dto);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("User must be logged in") ||
+                    e.getMessage().contains("Unauthorized access")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+            }
+            return ResponseEntity.badRequest().body("Error during getOrderHistory: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Internal server error: " + e.getMessage());
+        }
     }
 
 
