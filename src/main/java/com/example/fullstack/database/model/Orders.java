@@ -76,11 +76,23 @@ public class Orders {
     @Transient
     public BigDecimal getTotalBottleDepositFee() {
         long drinkItemCount = orderItems.stream()
-                .filter(item -> item.getMenuItem().getCategory() == MenuItemCategory.DRINKS)
-                .mapToLong(OrderItem::getQuantity)
+                .mapToLong(item -> {
+                    // Handle regular menu items
+                    if (item.getMenuItem() != null &&
+                            item.getMenuItem().getCategory() == MenuItemCategory.DRINKS) {
+                        return item.getQuantity();
+                    }
+                    // Handle custom meals - you can add logic here if custom meals
+                    // can contain drinks that should incur bottle deposit fees
+                    else if (item.getCustomMeal() != null) {
+                        // For now, return 0, but you could check custom meal ingredients
+                        // if they can contain drinks that need bottle deposits
+                        return 0L;
+                    }
+                    return 0L;
+                })
                 .sum();
 
-        //  PER_BOTTLE_DEPOSIT_FEE instead of the field
         return PER_BOTTLE_DEPOSIT_FEE.multiply(BigDecimal.valueOf(drinkItemCount));
     }
 

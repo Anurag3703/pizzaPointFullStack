@@ -7,6 +7,7 @@ import com.example.fullstack.database.repository.*;
 import com.example.fullstack.database.service.OrdersService;
 import com.example.fullstack.security.model.UserSecurity;
 import jakarta.transaction.Transactional;
+import org.hibernate.query.Order;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -25,11 +26,12 @@ public class OrdersServiceImpl implements OrdersService {
     private final AddressRepository addressRepository;
     private final OrderSequenceUtil orderSequenceUtil;
     private final PaymentServiceImpl paymentServiceImpl;
+    private final CustomMealRepository customMealRepository;
 
     public OrdersServiceImpl(OrdersRepository ordersRepository, OrderItemRepository orderItemRepository,
                              CartRepository cartRepository, MenuItemRepository menuItemRepository,
                              UserRepository userRepository, AddressRepository addressRepository,
-                             OrderSequenceUtil orderSequenceUtil, PaymentServiceImpl paymentServiceImpl) {
+                             OrderSequenceUtil orderSequenceUtil, PaymentServiceImpl paymentServiceImpl, CustomMealRepository customMealRepository) {
         this.ordersRepository = ordersRepository;
         this.cartRepository = cartRepository;
         this.userRepository = userRepository;
@@ -37,6 +39,7 @@ public class OrdersServiceImpl implements OrdersService {
         this.orderSequenceUtil = orderSequenceUtil;
         this.orderItemRepository = orderItemRepository;
         this.paymentServiceImpl = paymentServiceImpl;
+        this.customMealRepository = customMealRepository;
     }
 
     @Override
@@ -131,8 +134,8 @@ public class OrdersServiceImpl implements OrdersService {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("No cart found for the user"));
 
-        if (cart.getCartItems().isEmpty()) {
-            throw new RuntimeException("No items in the cart to checkout");
+        if (cart.getCartItems().isEmpty() && cart.getCustomMeals().isEmpty()) {
+            throw new RuntimeException("No items or meals in the cart to checkout");
         }
 
         Optional<Orders> existingOrder = ordersRepository.findTopByUserAndStatusOrderByCreatedAtDesc(user, Status.PENDING);
@@ -159,11 +162,38 @@ public class OrdersServiceImpl implements OrdersService {
 
     private List<OrderItem> createOrderItemsFromCart(Cart cart, Orders order) {
         List<OrderItem> newOrderItems = new ArrayList<>();
-        for (CartItem cartItem : cart.getCartItems()) {
-            OrderItem orderItem = createOrderItemFromCart(cartItem, order);
-            newOrderItems.add(orderItem);
+        if (cart.getCartItems() != null) {
+            for (CartItem cartItem : cart.getCartItems()) {
+                if (cartItem.getMenuItem() != null) {
+                    OrderItem orderItem = createOrderItemFromCart(cartItem, order);
+                    newOrderItems.add(orderItem);
+                }
+            }
+        }
+        if (cart.getCustomMeals() != null) {
+            for (CustomMeal customMeal : cart.getCustomMeals()) {
+                if (customMeal != null && customMeal.getTemplate() != null) {
+                    OrderItem orderItem = createOrderItemFromCustomMeal(customMeal, order);
+                    newOrderItems.add(orderItem);
+                }
+            }
         }
         return newOrderItems;
+    }
+
+    private OrderItem createOrderItemFromCustomMeal(CustomMeal customMeal, Orders order) {
+        if (customMeal == null || customMeal.getTemplate() == null) {
+            throw new IllegalArgumentException("CustomMeal or its template cannot be null");
+        }
+        OrderItem orderItem = new OrderItem();
+        orderItem.setCustomMeal(customMeal);
+        orderItem.setQuantity(1L);
+        orderItem.setPricePerItem(customMeal.getTotalPrice());
+        orderItem.setOrder(order);
+        customMeal.setCart(null);
+        customMealRepository.save(customMeal);
+        return orderItem;
+
     }
 
     private OrderItem createOrderItemFromCart(CartItem cartItem, Orders order) {

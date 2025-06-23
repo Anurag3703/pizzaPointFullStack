@@ -26,8 +26,12 @@ public class OrderItem {
     @JoinColumn(name = "order_id", nullable = false)
     private Orders order;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "menuItem_id",nullable = false)
+    @JoinColumn(name = "menuItem_id")
     private MenuItem menuItem;
+
+    @ManyToOne
+    @JoinColumn(name = "custom_meal_id")
+    private CustomMeal customMeal;
 
     @ManyToMany
     @JoinTable(
