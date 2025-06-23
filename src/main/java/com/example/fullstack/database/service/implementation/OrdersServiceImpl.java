@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
+@Transactional
 public class OrdersServiceImpl implements OrdersService {
 
     private final CartRepository cartRepository;

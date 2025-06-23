@@ -4,11 +4,13 @@ import com.example.fullstack.database.dto.*;
 import com.example.fullstack.database.dto.service.OrderDTOService;
 import com.example.fullstack.database.model.Orders;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Transactional
 public class OrderDTOServiceImpl implements OrderDTOService {
     @Override
     public OrderDTO convertToDTO(Orders order) {
