@@ -14,7 +14,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -184,25 +186,26 @@ public class OrdersController {
 
     }
 
-    @GetMapping("/history/all-orders/{email}")
-    public ResponseEntity<?> getOrderHistoryUser(@PathVariable String email) {
-        try {
-            List<Orders> orderHistory = ordersServiceImpl.getOrdersByUser(email);
-            List<OrderDTO> dto = orderHistory.stream()
-                    .map(orderDTOServiceImpl::convertToDTO)
-                    .toList();
 
-            // Return empty list instead of error when no orders
-            return ResponseEntity.ok(dto);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("User must be logged in") ||
-                    e.getMessage().contains("Unauthorized access")) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+
+    @GetMapping("/history/all-orders/{email}")
+    public ResponseEntity<?> getOrdersByUser(@PathVariable String email) {
+        try {
+            List<Orders> orders = ordersServiceImpl.getOrdersByUser(email);
+
+            // Return empty list with 200 status instead of error
+            if (orders.isEmpty()) {
+                return ResponseEntity.ok(Collections.emptyList());
             }
-            return ResponseEntity.badRequest().body("Error during getOrderHistory: " + e.getMessage());
+
+            return ResponseEntity.ok(orders);
         } catch (Exception e) {
+            // Log the error for debugging
+            System.err.println("Error fetching orders for user " + email + ": " + e.getMessage());
+
+            // Return appropriate error response
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Internal server error: " + e.getMessage());
+                    .body(Map.of("error", "Failed to fetch orders", "message", e.getMessage()));
         }
     }
 

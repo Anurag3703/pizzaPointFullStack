@@ -114,7 +114,7 @@ public class OrdersServiceImpl implements OrdersService {
         User user = getUserFromUserSecurity(userSecurity);
         Orders order = initializeOrder(user, OrderType.PICKUP);
 
-         //Clear address for pickup orders
+        //Clear address for pickup orders
         order.setAddress(null);
 
         Cart cart = cartRepository.findByUser(user).stream()
@@ -235,10 +235,9 @@ public class OrdersServiceImpl implements OrdersService {
         User user = getUserFromUserSecurity(userSecurity);
         List<Orders> orders = ordersRepository.findByUserEmailAndStatusNotOrderByCreatedAtDesc(email, Status.PENDING);
 
-        if (orders.isEmpty()) {
-            throw new RuntimeException("Customer has no orders");
-        }
-        return orders;
+        // ✅ FIX: Return empty list instead of throwing exception
+        // This prevents the 400 error when user has no orders
+        return orders; // Will return empty list if no orders found
     }
 
     @Override
