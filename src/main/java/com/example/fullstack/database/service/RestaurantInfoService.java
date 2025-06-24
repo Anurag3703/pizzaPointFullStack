@@ -6,4 +6,5 @@ public interface RestaurantInfoService {
     void addRestaurantInfo(RestaurantInfo restaurantInfo);
     void updateRestaurantOpenStatus(int restaurantId, boolean isOpen);
     void updateRestaurantInfo(RestaurantInfo restaurantInfo);
+    boolean isRestaurantOpen();
 }

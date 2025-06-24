@@ -7,6 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/restaurant")
 public class RestaurantInfoController {
@@ -32,6 +35,20 @@ public class RestaurantInfoController {
             return ResponseEntity.ok("Restaurant status updated successfully.");
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/restaurant-status")
+    public ResponseEntity<?> getRestaurantStatus() {
+        try{
+            boolean isOpen = restaurantInfoServiceImpl.isRestaurantOpen();
+            Map<String, Boolean> restaurantStatus = new HashMap<>();
+            restaurantStatus.put("isOpen", isOpen);
+            return ResponseEntity.ok(restaurantStatus);
+
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

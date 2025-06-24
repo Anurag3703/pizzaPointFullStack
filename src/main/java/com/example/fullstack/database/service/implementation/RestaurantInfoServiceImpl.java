@@ -30,4 +30,11 @@ public class RestaurantInfoServiceImpl implements RestaurantInfoService {
     public void updateRestaurantInfo(RestaurantInfo restaurantInfo) {
 
     }
+
+    @Override
+    public boolean isRestaurantOpen() {
+        RestaurantInfo restaurantInfo = restaurantInfoRepository.findAll().stream().findFirst().orElseThrow(() -> new RuntimeException("Restaurant not found"));
+        return restaurantInfo.isOpen();
+
+    }
 }
