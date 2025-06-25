@@ -76,9 +76,30 @@ public class OrdersServiceImpl implements OrdersService {
             }
             order.setTransactionId(null);
         }
+        validateOrderStatusBeforeUpdate(orderId, status);
 
         order.setStatus(status);
         ordersRepository.save(order);
+    }
+
+    public void validateOrderStatusBeforeUpdate(String orderId, Status status){
+        Orders order = ordersRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+
+
+
+        if(order.getStatus() == Status.CANCELLED) {
+            throw new RuntimeException("Can't change status order already cancelled" + orderId);
+        }
+
+        if(order.getStatus() == Status.DELIVERED) {
+            throw new RuntimeException("Order Already Delivered" + orderId);
+        }
+
+        if(order.getStatus().equals(status)) {
+            throw new RuntimeException("Cannot update order " + orderId + ": status is already " + status + ".");
+        }
+
     }
 
     @Override
@@ -132,6 +153,20 @@ public class OrdersServiceImpl implements OrdersService {
         return ordersRepository.save(order);
     }
 
+
+    private BigDecimal calculateCartItemsTotal(Cart cart){
+        return cart.getCartItems().stream()
+                .map(cartItem -> {
+                    BigDecimal basePrice = cartItem.getMenuItem().getPrice();
+                    BigDecimal extrasPrice = cartItem.getExtras() != null ?
+                            cartItem.getExtras().stream()
+                                    .map(Extra::getPrice)
+                                    .reduce(BigDecimal.ZERO, BigDecimal::add) : BigDecimal.ZERO;
+                    return basePrice.add(extrasPrice).multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
     private Orders initializeOrder(User user, OrderType orderType) {
         Cart cart = cartRepository.findByUser(user).stream()
                 .findFirst()
@@ -140,7 +175,12 @@ public class OrdersServiceImpl implements OrdersService {
         if (cart.getCartItems().isEmpty()) {
             throw new RuntimeException("No items in the cart to checkout");
         }
-
+        BigDecimal cartItemTotal = calculateCartItemsTotal(cart);
+        if(cartItemTotal.compareTo(new BigDecimal("3000")) < 0) {
+            throw new RuntimeException(
+                    "Minimum order amount is 3000 HUF. Please add more items to reach the minimum."
+            );
+        }
         Optional<Orders> existingOrder = ordersRepository.findTopByUserAndStatusOrderByCreatedAtDesc(user, Status.PENDING);
         Orders order;
         if (existingOrder.isPresent()) {
@@ -195,9 +235,10 @@ public class OrdersServiceImpl implements OrdersService {
 
     @Override
     public List<Orders> getAllOrders() {
-        List<Status> excludedStatuses = Arrays.asList(Status.PENDING, Status.CANCELLED);
+        List<Status> excludedStatuses = Arrays.asList(Status.PENDING, Status.CANCELLED,Status.DELIVERED,Status.COMPLETED,Status.FAILED);
         return ordersRepository.findByStatusNotInOrderByCreatedAtDesc(excludedStatuses);
     }
+
 
     @Override
     public List<Orders> getOrdersByUser(String email) {
@@ -334,6 +375,21 @@ public class OrdersServiceImpl implements OrdersService {
             }
         }
         ordersRepository.deleteAll(pendingOrders);
+    }
+
+    @Override
+    public List<Orders> getAlLPlacedOrders() {
+        return ordersRepository.findByStatusOrderByCreatedAtDesc(Status.PLACED);
+    }
+
+    @Override
+    public List<Orders> getAllDeliveredOrders() {
+        return ordersRepository.findByStatusOrderByCreatedAtDesc(Status.DELIVERED);
+    }
+
+    @Override
+    public List<Orders> getAllCancelledOrders() {
+        return ordersRepository.findByStatusOrderByCreatedAtDesc(Status.CANCELLED);
     }
 
     private User getUserFromUserSecurity(UserSecurity userSecurity) {

@@ -23,5 +23,8 @@ public interface OrdersService {
     Orders  getOrderById(String orderId);
     Orders confirmCheckout(String orderId, PaymentMethod paymentMethod, OrderType orderType, String cardToken);
     void deletePendingOrders();
+    List<Orders> getAlLPlacedOrders();
+    List<Orders> getAllDeliveredOrders();
+    List<Orders> getAllCancelledOrders();
 
 }

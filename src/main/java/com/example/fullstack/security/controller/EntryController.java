@@ -22,15 +22,14 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -195,10 +194,23 @@ public class EntryController {
                         Date expirationDate = jwtTokenUtil.getExpirationDateFromToken(token);
                         long timeUntilExpiry = expirationDate.getTime() - System.currentTimeMillis();
 
+                        String role = authentication.getAuthorities().stream()
+                                .findFirst()
+                                .map(grantedAuthority -> {
+                                    String auth = grantedAuthority.getAuthority();
+                                    if (auth.startsWith("ROLE_")) {
+                                        return auth.substring(5); // Remove "ROLE_" prefix
+                                    }
+                                    return auth;
+                                })
+                                .orElse("UNKNOWN");
+
+
                         Map<String, Object> response = new HashMap<>();
                         response.put("status", "valid");
                         response.put("message", "Token is valid for user with email: " + email);
                         response.put("authenticatedUser", authentication.getName());
+                        response.put("role", role);
                         response.put("expiresAt", expirationDate);
                         response.put("timeUntilExpiry", timeUntilExpiry + " ms");
                         response.put("isExpired", false);

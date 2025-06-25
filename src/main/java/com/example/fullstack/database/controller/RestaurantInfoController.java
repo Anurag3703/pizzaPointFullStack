@@ -48,7 +48,10 @@ public class RestaurantInfoController {
             return ResponseEntity.ok(restaurantStatus);
 
         }catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+
+//            Use .body(...) to send a response body.
+//            .build() only sends headers and status with no body
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error",e.getMessage()));
         }
     }
 }

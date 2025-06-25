@@ -54,6 +54,12 @@ public class CartServiceImpl implements CartService {
                     return cartRepository.save(newCart);
                 });
 
+//        for (String extraId : extraItemId) {
+//            if (!extraRepository.existsById(extraId)) {
+//                throw new RuntimeException("Extra item not found: " + extraId);
+//            }
+//        }
+
         // Get extras
         List<Extra> extras = extraRepository.findAllById(extraItemId);
 

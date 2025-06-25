@@ -7,6 +7,7 @@ import com.example.fullstack.database.service.implementation.OrderItemServiceImp
 import com.example.fullstack.database.service.implementation.OrdersServiceImpl;
 import com.example.fullstack.database.service.implementation.WhatsAppService;
 import jakarta.servlet.http.HttpSession;
+import org.apache.catalina.valves.rewrite.InternalRewriteMap;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -55,7 +57,7 @@ public class OrdersController {
     }
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/status")
-    public String updateOrderStatus(@PathVariable String id, @RequestBody Status status) {
+    public ResponseEntity<?> updateOrderStatus(@PathVariable String id, @RequestParam Status status) {
         try{
             Status newStatus = Status.valueOf(status.toUpperCase());
             ordersServiceImpl.updateOrderStatus(id, newStatus);
@@ -82,11 +84,11 @@ public class OrdersController {
                 emailService.sendCancellationEmail(toEmail, orderDTO);
 
             }
-            return "Order status updated";
+            return ResponseEntity.status(HttpStatus.OK).body("Order Status updated to " + newStatus.toString().toLowerCase() + " successfully");
         }catch (IllegalArgumentException e){
-            return e.getMessage();
+            return ResponseEntity.badRequest().body("Invalid status: " + status);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+             return ResponseEntity.badRequest().body(Map.of("error" , e.getMessage()));
         }
     }
 
@@ -223,6 +225,17 @@ public class OrdersController {
                 .body(new ErrorResponse("An unexpected error occurred: " + ex.getMessage()));
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    // You can also handle IllegalArgumentException separately if needed
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
     // Error response class for consistent error handling
     public record ErrorResponse(String message) {}
     @PostMapping("/pickup-checkout")
@@ -235,6 +248,53 @@ public class OrdersController {
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         }
     }
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("status/placed")
+    public ResponseEntity<?> getAllPlacedOrders() {
+        try{
+            List<Orders> placedOrders = ordersServiceImpl.getAlLPlacedOrders();
+            List<OrderDTO> dto = placedOrders.stream()
+                    .map(orderDTOServiceImpl::convertToDTO)
+                    .toList();
+            return ResponseEntity.ok(dto);
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("status/delivered")
+    public ResponseEntity<?> getAllDeliveredOrders() {
+        try{
+            List<Orders> deliveredOrders = ordersServiceImpl.getAllDeliveredOrders();
+            List<OrderDTO> dto = deliveredOrders.stream()
+                    .map(orderDTOServiceImpl::convertToDTO)
+                    .toList();
+            return ResponseEntity.ok(dto);
+
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("status/cancelled")
+    public ResponseEntity<?> getAllCancelledOrders() {
+        try{
+            List<Orders> cancelledOrders = ordersServiceImpl.getAllCancelledOrders();
+            List<OrderDTO> dto = cancelledOrders.stream()
+                    .map(orderDTOServiceImpl::convertToDTO)
+                    .toList();
+            return ResponseEntity.ok(dto);
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+
+
 
 
 }
