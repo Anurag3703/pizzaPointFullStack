@@ -392,6 +392,13 @@ public class OrdersServiceImpl implements OrdersService {
         return ordersRepository.findByStatusOrderByCreatedAtDesc(Status.CANCELLED);
     }
 
+    @Override
+    public List<Orders> getAllDeliveredAndCompletedOrders() {
+
+        List<Status> statuses = Arrays.asList(Status.DELIVERED, Status.COMPLETED);
+        return ordersRepository.findByStatusInOrderByCreatedAtDesc(statuses);
+    }
+
     private User getUserFromUserSecurity(UserSecurity userSecurity) {
         return userRepository.findByEmail(userSecurity.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));

@@ -26,5 +26,7 @@ public interface OrdersService {
     List<Orders> getAlLPlacedOrders();
     List<Orders> getAllDeliveredOrders();
     List<Orders> getAllCancelledOrders();
+    List<Orders> getAllDeliveredAndCompletedOrders();
+
 
 }

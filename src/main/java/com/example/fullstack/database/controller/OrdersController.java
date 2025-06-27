@@ -294,6 +294,21 @@ public class OrdersController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/get/completed-delivered")
+    public ResponseEntity<?> getAllCompletedDelivered() {
+        try{
+            List<Orders> orders = ordersServiceImpl.getAllDeliveredAndCompletedOrders();
+            List<OrderDTO> dto = orders.stream().map(orderDTOServiceImpl::convertToDTO).toList();
+            return ResponseEntity.ok(dto);
+
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+
+
 
 
 
