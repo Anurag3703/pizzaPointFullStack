@@ -2,6 +2,7 @@ package com.example.fullstack.database.service.implementation;
 
 import com.example.fullstack.database.dto.OrderDTO;
 import com.example.fullstack.database.dto.OrderItemDTO;
+import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +11,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
@@ -136,4 +138,55 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+
+    public void sendPickupCompletionEmail(String toEmail, OrderDTO order) throws Exception {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        ClassPathResource resource = new ClassPathResource("templates/email/pickup-completion-email-template.html");
+        StringBuilder htmlContent = new StringBuilder();
+        try (InputStream inputStream = resource.getInputStream();
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                htmlContent.append(line).append("\n");
+            }
+        }
+
+        StringBuilder orderItemsHtml = new StringBuilder();
+        List<OrderItemDTO> orderItems = order.getOrderItems();
+        if (orderItems != null) {
+            for (OrderItemDTO item : orderItems) {
+                // Get the actual menu item name instead of ID
+                String itemName = item.getOrderMenuItemName() != null ? item.getOrderMenuItemName() : "Unknown Item";
+                String itemText = String.format("%dx %s - Ft %.2f", item.getQuantity(), itemName, item.getPricePerItem());
+                orderItemsHtml.append("<li>").append(itemText).append("</li>");
+            }
+        }
+        String orderItemsSection = orderItemsHtml.toString();
+
+        DecimalFormat df = new DecimalFormat("#.00");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MMMM dd, yyyy, hh:mm a");
+
+        String completionDateTime = order.getUpdatedAt() != null ? order.getUpdatedAt().format(dtf) : "N/A";
+
+        String finalContent = htmlContent.toString()
+                .replace("[Customer Name]", order.getUser() != null ? order.getUser().getName() : "Customer")
+                .replace("[Order ID]", order.getOrderId() != null ? order.getOrderId() : "N/A")
+                .replace("[Completion DateTime]", completionDateTime)
+                .replace("[Order Items]", orderItemsSection)
+                .replace("[Total Cart Amount]", df.format(order.getTotalCartAmount() != null ? order.getTotalCartAmount() : BigDecimal.ZERO))
+                .replace("[Service Fee]", df.format(order.getServiceFee() != null ? order.getServiceFee() : BigDecimal.ZERO))
+                .replace("[Bottle Deposit Fee]", df.format(order.getBottleDepositFee() != null ? order.getBottleDepositFee() : BigDecimal.ZERO))
+                .replace("[Total Price]", df.format(order.getTotalPrice() != null ? order.getTotalPrice() : BigDecimal.ZERO));
+
+        helper.setFrom(fromEmail);
+        helper.setTo(toEmail);
+        helper.setSubject("PIZZA POINT - Your Order is Ready for Pickup!");
+        helper.setText(finalContent, true);
+
+        mailSender.send(message);
+    }
+
 }

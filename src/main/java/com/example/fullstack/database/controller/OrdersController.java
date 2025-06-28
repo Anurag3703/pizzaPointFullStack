@@ -63,6 +63,7 @@ public class OrdersController {
             ordersServiceImpl.updateOrderStatus(id, newStatus);
             Orders updatedOrder = ordersServiceImpl.getOrderById(id);
             OrderDTO orderDTO = orderDTOServiceImpl.convertToDTO(updatedOrder);
+//            String toEmail = updatedOrder.getUser().getEmail();
             String statusMessage = getStatusMessage(newStatus);
             System.out.println("Sending to /topic/orders/" + id + ": " + statusMessage);
             messagingTemplate.convertAndSend("/topic/orders/" + id, statusMessage);
@@ -83,6 +84,12 @@ public class OrdersController {
                 String toEmail = order.getUser().getEmail();
                 emailService.sendCancellationEmail(toEmail, orderDTO);
 
+            }
+
+            if(newStatus == Status.READY_FOR_PICKUP){
+                Orders order = ordersServiceImpl.getOrderById(id);
+                String toEmail = order.getUser().getEmail();
+                emailService.sendPickupCompletionEmail(toEmail, orderDTO);
             }
             return ResponseEntity.status(HttpStatus.OK).body("Order Status updated to " + newStatus.toString().toLowerCase() + " successfully");
         }catch (IllegalArgumentException e){
