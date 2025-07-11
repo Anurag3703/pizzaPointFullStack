@@ -129,7 +129,7 @@ public class SecurityConfig {
 
                // .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/menuItem/get/category/**","/auth/**","/api/menuItem/get/name/size","/api/menuItem/items","/auth/validate-token/{email}","/api/extras/get/all","/api/address/validate").permitAll() // allow unauthenticated access to login/signup
+                        .requestMatchers("/api/menuItem/get/category/**","/auth/**","/api/menuItem/get/name/size","/api/menuItem/items","/auth/validate-token/{email}","/api/extras/get/all","/api/address/validate","/custom-swagger","/custom-swagger/**","/swagger-ui/**","/v3/api-docs/**").permitAll() // allow unauthenticated access to login/signup
                         .anyRequest().authenticated() // require JWT for everything else
                 )
               // .sessionManagement(session -> session

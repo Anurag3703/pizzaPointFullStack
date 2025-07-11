@@ -39,5 +39,5 @@ public interface OrdersRepository extends JpaRepository<Orders, String> {
     List<Orders> findByStatusInOrderByCreatedAtDesc(List<Status> statuses);
 
 
-
+    List<Orders> findByUserAndStatusNotIn(User user, List<Status> list);
 }

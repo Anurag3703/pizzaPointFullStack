@@ -6,6 +6,8 @@ import com.example.fullstack.database.service.implementation.EmailService;
 import com.example.fullstack.database.service.implementation.OrderItemServiceImpl;
 import com.example.fullstack.database.service.implementation.OrdersServiceImpl;
 import com.example.fullstack.database.service.implementation.WhatsAppService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import org.apache.catalina.valves.rewrite.InternalRewriteMap;
 import org.springframework.http.HttpStatus;
@@ -21,8 +23,10 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/orders")
+
 public class OrdersController {
     private final OrderItemServiceImpl orderItemServiceImpl;
+    private final String adminEmail = "pizzzapointdevelopers@gmial.com";
     OrdersServiceImpl ordersServiceImpl;
     private final SimpMessagingTemplate messagingTemplate;
     private final EmailService emailService;
@@ -138,7 +142,7 @@ public class OrdersController {
             default -> "Unknown order status";
         };
     }
-
+    @Operation(summary = "Place an order", description = "Confirm checkout and place an order")
     @PostMapping("/placeorder")
     public ResponseEntity<?> placeOrder(@RequestParam String orderId ,
                                         @RequestParam PaymentMethod paymentMethod,
@@ -159,6 +163,14 @@ public class OrdersController {
 
             if (responseDTO.getStatus() == Status.PLACED) {
                 whatsAppService.sendNewOrderNotification(order);
+
+            }
+            try{
+                if(responseDTO.getStatus() == Status.PLACED) {
+                    emailService.sendNewOrderAdminEmail(responseDTO);
+                }
+            }catch (Exception e){
+                throw new RuntimeException("Coudn't send the email" + e.getMessage());
             }
 
             return ResponseEntity.ok(responseDTO);
@@ -312,6 +324,36 @@ public class OrdersController {
         }catch (Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e.getMessage()));
         }
+    }
+
+
+    @PostMapping("/discount")
+    public ResponseEntity<?> confirmCheckoutWithDiscount(@RequestParam String orderId ,
+                                                         @RequestParam PaymentMethod paymentMethod,
+                                                         @RequestParam OrderType orderType,
+                                                         @RequestParam(required = false) String cardToken,
+                                                         @RequestParam(required = false) String discountCode) {
+        try {
+            if (paymentMethod == PaymentMethod.CREDIT_CARD && (cardToken == null || cardToken.trim().isEmpty())) {
+                return ResponseEntity.badRequest().body(new ErrorResponse("Card token is required for card payments"));
+            }
+
+            Orders order = ordersServiceImpl.confirmCheckoutWithDiscount(orderId, paymentMethod, orderType, cardToken,discountCode);
+            OrderDTO responseDTO = orderDTOServiceImpl.convertToDTO(order);
+
+            messagingTemplate.convertAndSend("/topic/orders/" + order.getOrderId(), "Your order has been placed successfully!");
+            messagingTemplate.convertAndSend("/topic/admin", "New order received: " + order.getOrderId());
+
+            if (responseDTO.getStatus() == Status.PLACED) {
+                whatsAppService.sendNewOrderNotification(order);
+            }
+
+            return ResponseEntity.ok(responseDTO);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        }
+
+
     }
 
 

@@ -27,6 +27,7 @@ public interface OrdersService {
     List<Orders> getAllDeliveredOrders();
     List<Orders> getAllCancelledOrders();
     List<Orders> getAllDeliveredAndCompletedOrders();
+    Orders confirmCheckoutWithDiscount(String orderId, PaymentMethod paymentMethod, OrderType orderType, String cardToken,String discountCode);
 
 
 }

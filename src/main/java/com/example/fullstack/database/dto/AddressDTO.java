@@ -2,10 +2,14 @@ package com.example.fullstack.database.dto;
 
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Optional;
 
 @Data
+@Getter
+@Setter
 public class AddressDTO {
     private Long addressId;
     private String buildingName;
