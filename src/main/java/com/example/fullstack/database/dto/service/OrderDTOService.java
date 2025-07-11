@@ -5,4 +5,5 @@ import com.example.fullstack.database.model.Orders;
 
 public interface OrderDTOService {
     OrderDTO convertToDTO(Orders order);
+    OrderDTO convertToDTOAdmin(Orders order);
 }

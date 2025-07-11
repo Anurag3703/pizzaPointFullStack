@@ -46,7 +46,7 @@ public class CartController {
     }
 
     @PostMapping("/add-to-cart")
-    public ResponseEntity<String> addCartItem(HttpSession session
+    public ResponseEntity<?> addCartItem(HttpSession session
             , @RequestParam String menuItemId
             , @RequestParam Long quantity
             , @RequestParam(required = false) List<String> extraItemId

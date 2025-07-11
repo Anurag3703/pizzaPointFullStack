@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -37,6 +38,9 @@ public class User {
     private List<Orders> orders;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Review> reviews;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DiscountUsage> discountUsages = new ArrayList<>();
 
     private boolean isAnonymous = false;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)

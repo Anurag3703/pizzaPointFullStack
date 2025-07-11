@@ -30,4 +30,6 @@ public class OrderDTO {
     private BigDecimal serviceFee;
     private BigDecimal bottleDepositFee;
     private BigDecimal totalCartAmount;
+    private BigDecimal discountAmount;
+    private BigDecimal packagingFee;
 }

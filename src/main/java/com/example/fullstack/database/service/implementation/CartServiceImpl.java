@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -19,6 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class CartServiceImpl implements CartService {
+    private static final Logger logger = LoggerFactory.getLogger(CartServiceImpl.class);
 
     private final CartRepository cartRepository;
     private final ExtraRepository extraRepository;
@@ -26,9 +26,9 @@ public class CartServiceImpl implements CartService {
     private final MenuItemRepository menuItemRepository;
     private final CartItemRepository cartItemRepository;
 
-    @Autowired
     public CartServiceImpl(CartRepository cartRepository, ExtraRepository extraRepository,
-                           UserService userService, MenuItemRepository menuItemRepository, CartItemRepository cartItemRepository) {
+                           UserService userService, MenuItemRepository menuItemRepository,
+                           CartItemRepository cartItemRepository) {
         this.cartRepository = cartRepository;
         this.extraRepository = extraRepository;
         this.userService = userService;
@@ -38,102 +38,43 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    public void addItemToCart(HttpSession session, String menuItemId, Long quantity, List<String> extraItemId, String instructions) {
+    public void addItemToCart(HttpSession session, String menuItemId, Long quantity, List<String> extraItemIds, String instructions) {
+        validateInputs(menuItemId, quantity, extraItemIds);
+
         User currentUser = userService.getCurrentUser();
         MenuItem menuItem = menuItemRepository.findById(menuItemId)
-                .orElseThrow(() -> new RuntimeException("Menu Item Not Found"));
+                .orElseThrow(() -> new RuntimeException("Menu Item Not Found: " + menuItemId));
 
-        // Find or create cart
-        Cart cart = cartRepository.findByUser(currentUser)
-                .stream()
-                .findFirst()
-                .orElseGet(() -> {
-                    Cart newCart = new Cart();
-                    newCart.setUser(currentUser);
-                    newCart.setTotalPrice(BigDecimal.ZERO);
-                    return cartRepository.save(newCart);
-                });
+        Cart cart = getOrCreateCart(currentUser);
+        List<Extra> extras = validateAndGetExtras(extraItemIds);
 
-//        for (String extraId : extraItemId) {
-//            if (!extraRepository.existsById(extraId)) {
-//                throw new RuntimeException("Extra item not found: " + extraId);
-//            }
-//        }
+        CartItem cartItem = findMatchingCartItem(cart, menuItem, extras, instructions)
+                .map(existingItem -> updateExistingCartItem(existingItem, quantity))
+                .orElseGet(() -> createNewCartItem(cart, menuItem, quantity, extras, instructions));
 
-        // Get extras
-        List<Extra> extras = extraRepository.findAllById(extraItemId);
-
-        // Check if same item with same extras and instructions already exists
-        CartItem existingCartItem = cart.getCartItems().stream()
-                .filter(item -> item.getMenuItem().equals(menuItem) &&
-                        hasSameExtras(item.getExtras(), extras) &&
-                        Objects.equals(item.getInstruction(), instructions))
-                .findFirst()
-                .orElse(null);
-
-        CartItem cartItem;
-        if (existingCartItem != null) {
-            // Update existing cart item
-            cartItem = existingCartItem;
-            cartItem.setQuantity(cartItem.getQuantity() + quantity);
-        } else {
-            // Create new cart item
-            cartItem = new CartItem();
-            cartItem.setCart(cart);
-            cartItem.setMenuItem(menuItem);
-            cartItem.setQuantity(quantity);
-            cartItem.setExtras(extras);
-            cartItem.setInstruction(instructions);
-            cart.getCartItems().add(cartItem); // Add to cart's item list only for new items
-        }
-
-        // Recalculate cart item total price using the helper method
-        cartItem.setTotalPrice(calculateCartItemTotalPrice(cartItem));
-        cartItemRepository.save(cartItem);
-
-        // Recalculate cart total price
-        cart.setTotalPrice(calculateCartTotalPrice(cart));
-        cartRepository.save(cart);
+        updateCartAndSave(cart, cartItem);
     }
 
     @Override
     @Transactional
     public void updateItemQuantity(Long cartItemId, Long quantity) {
-        Logger logger = LoggerFactory.getLogger(getClass());
-        try {
-            // Fetch the cart item only once
-            CartItem cartItem = cartItemRepository.findById(cartItemId)
-                    .orElseThrow(() -> new RuntimeException("Cart item not found"));
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new RuntimeException("Cart item not found: " + cartItemId));
 
-            Cart cart = cartItem.getCart();
+        Cart cart = cartItem.getCart();
 
-            // Case 1: When quantity is zero or negative - remove item
-            if (quantity <= 0) {
-                cart.getCartItems().remove(cartItem);  // Remove from the List of cart item in the Cart
-                cartItemRepository.delete(cartItem);   // Remove from CartItem table
-
-                // Recalculate cart total using helper method
-                cart.setTotalPrice(calculateCartTotalPrice(cart));
-                cartRepository.save(cart);  // Save cart
-
-                logger.debug("Cart item with ID {} removed from the database", cartItemId);
-                return;
-            }
-
-            // Case 2: Update quantity
+        if (quantity <= 0) {
+            cart.getCartItems().remove(cartItem);
+            cartItemRepository.delete(cartItem);
+        } else {
             cartItem.setQuantity(quantity);
-            // Use the helper method to calculate total price including extras
             cartItem.setTotalPrice(calculateCartItemTotalPrice(cartItem));
             cartItemRepository.save(cartItem);
-
-            // Recalculate cart total using helper method
-            cart.setTotalPrice(calculateCartTotalPrice(cart));
-            cartRepository.save(cart);  // Save cart
-
-        } catch (RuntimeException e) {
-            logger.error("Error updating cart item: {}", e.getMessage());
-            throw e;
         }
+
+        cart.setTotalPrice(calculateCartTotalPrice(cart));
+        cartRepository.save(cart);
+        logger.debug("Updated cart item {} with quantity {}", cartItemId, quantity);
     }
 
     @Override
@@ -143,24 +84,14 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public BigDecimal getCartTotalPrice(HttpSession session) {
-        User currentUser = userService.getCurrentUser();
-        if (currentUser == null) {
-            return BigDecimal.ZERO;
-        }
-
-        Cart cart = cartRepository.findByUser(currentUser)
-                .stream()
-                .findFirst()
-                .orElse(null);
-
-        return cart != null ? cart.getTotalPrice() : BigDecimal.ZERO;
+        return getOrCreateCart(userService.getCurrentUser()).getTotalPrice();
     }
 
     @Override
     public List<Cart> getAllCartItems() {
-        User user = userService.getCurrentUser(); // Get the current user
+        User user = userService.getCurrentUser();
         if (user == null) {
-            throw new RuntimeException("User not authenticated"); // Handle case where user is not logged in
+            throw new RuntimeException("User not authenticated");
         }
         return cartRepository.findByUser(user);
     }
@@ -172,33 +103,25 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public void transferGuestCartToUser(HttpSession session, User user) {
-        // Implementation for transferring guest cart to authenticated user
-        // This can be implemented based on your specific requirements
+        // Implementation pending based on requirements
     }
 
     @Override
     public BigDecimal calculateCartItemTotalPrice(CartItem cartItem) {
-        BigDecimal basePrice = cartItem.getMenuItem().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+        BigDecimal basePrice = cartItem.getMenuItem().getPrice()
+                .multiply(BigDecimal.valueOf(cartItem.getQuantity()));
         BigDecimal extraPrice = cartItem.getExtras().stream()
                 .map(Extra::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .multiply(BigDecimal.valueOf(cartItem.getQuantity()));
-
         return basePrice.add(extraPrice);
     }
 
     @Override
     public BigDecimal calculateCartTotalPrice(Cart cart) {
-        // Calculate total of all cart items
-        BigDecimal itemsTotal = cart.getCartItems().stream()
+        return cart.getCartItems().stream()
                 .map(CartItem::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        // Add delivery fee if needed (uncomment and modify as per your business logic)
-        // BigDecimal deliveryFee = BigDecimal.valueOf(400);
-        // return itemsTotal.add(deliveryFee);
-
-        return itemsTotal;
     }
 
     @Override
@@ -207,36 +130,79 @@ public class CartServiceImpl implements CartService {
         return cartRepository.findByUser(currentUser)
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Cart not found for the current user"));
+                .orElseThrow(() -> new RuntimeException("Cart not found for user"));
     }
 
-    // Helper method to check if two lists of extras are the same
+    private void validateInputs(String menuItemId, Long quantity, List<String> extraItemIds) {
+        if (menuItemId == null || menuItemId.isBlank()) {
+            throw new IllegalArgumentException("Menu item ID cannot be null or empty");
+        }
+        if (quantity == null || quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive");
+        }
+        if (extraItemIds == null) {
+            throw new IllegalArgumentException("Extra items list cannot be null");
+        }
+    }
+
+    private Cart getOrCreateCart(User user) {
+        return cartRepository.findByUser(user)
+                .stream()
+                .findFirst()
+                .orElseGet(() -> {
+                    Cart newCart = new Cart();
+                    newCart.setUser(user);
+                    newCart.setTotalPrice(BigDecimal.ZERO);
+                    return cartRepository.save(newCart);
+                });
+    }
+
+    private List<Extra> validateAndGetExtras(List<String> extraItemIds) {
+        List<Extra> extras = extraRepository.findAllById(extraItemIds);
+        if (extras.size() != extraItemIds.size()) {
+            throw new RuntimeException("One or more extra items not found");
+        }
+        return extras;
+    }
+
+    private Optional<CartItem> findMatchingCartItem(Cart cart, MenuItem menuItem, List<Extra> extras, String instructions) {
+        return cart.getCartItems().stream()
+                .filter(item -> item.getMenuItem().equals(menuItem) &&
+                        hasSameExtras(item.getExtras(), extras) &&
+                        Objects.equals(item.getInstruction(), instructions))
+                .findFirst();
+    }
+
+    private CartItem updateExistingCartItem(CartItem existingItem, Long quantity) {
+        existingItem.setQuantity(existingItem.getQuantity() + quantity);
+        return existingItem;
+    }
+
+    private CartItem createNewCartItem(Cart cart, MenuItem menuItem, Long quantity, List<Extra> extras, String instructions) {
+        CartItem newItem = new CartItem();
+        newItem.setCart(cart);
+        newItem.setMenuItem(menuItem);
+        newItem.setQuantity(quantity);
+        newItem.setExtras(extras);
+        newItem.setInstruction(instructions);
+        cart.getCartItems().add(newItem);
+        return newItem;
+    }
+
+    private void updateCartAndSave(Cart cart, CartItem cartItem) {
+        cartItem.setTotalPrice(calculateCartItemTotalPrice(cartItem));
+        cartItemRepository.save(cartItem);
+        cart.setTotalPrice(calculateCartTotalPrice(cart));
+        cartRepository.save(cart);
+    }
+
     private boolean hasSameExtras(List<Extra> extras1, List<Extra> extras2) {
-        if (extras1 == null && extras2 == null) {
-            return true;
-        }
-        if (extras1 == null || extras2 == null) {
-            return false;
-        }
-        if (extras1.size() != extras2.size()) {
-            return false;
-        }
+        if (extras1 == null && extras2 == null) return true;
+        if (extras1 == null || extras2 == null) return false;
+        if (extras1.size() != extras2.size()) return false;
 
-        // Sort both lists by ID and compare
-        List<String> ids1 = extras1.stream()
-                .map(Extra::getId)
-                .sorted()
-                .collect(Collectors.toList());
-        List<String> ids2 = extras2.stream()
-                .map(Extra::getId)
-                .sorted()
-                .collect(Collectors.toList());
-
+        List<String> ids1 = extras1.stream().map(Extra::getId).sorted().toList();
+        List<String> ids2 = extras2.stream().map(Extra::getId).sorted().toList();
         return ids1.equals(ids2);
     }
 }
-
-//    @Override
-//    public Cart getCartByUser(User user) {
-//        return null;
-//    }

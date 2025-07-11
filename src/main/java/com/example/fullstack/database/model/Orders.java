@@ -54,6 +54,14 @@ public class Orders {
 
     private String transactionId;
 
+    @ManyToOne
+    @JoinColumn(name = "discount_id", nullable = true)
+    private Discount discount;
+
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
+    private BigDecimal packageFee = BigDecimal.valueOf(299);
+
     @PrePersist
     public void generateId() {
         if (orderId == null) {

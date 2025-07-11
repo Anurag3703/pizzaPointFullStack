@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(to bottom, #f4f6f8, #e0e4e8);
+            margin: 0;
+            padding: 3vw;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 700px;
+            width: 95%;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+            flex: 1;
+        }
+        .urgent-banner {
+            background: linear-gradient(45deg, #e60000, #ff4d4d);
+            color: #ffffff;
+            padding: 2.5vw 4vw;
+            text-align: center;
+            font-weight: 600;
+            font-size: clamp(14px, 3.5vw, 16px);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            animation: pulse 2s infinite ease-in-out;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.02); }
+        }
+        .header {
+            background: linear-gradient(135deg, #1a1a1a, #2c2c2c);
+            color: #ffffff;
+            padding: 5vw 4vw;
+            text-align: center;
+            position: relative;
+        }
+        .header .logo {
+            max-width: clamp(100px, 20vw, 140px);
+            height: auto;
+            margin-bottom: 2.5vw;
+            transition: transform 0.3s ease;
+        }
+        .header .logo:hover {
+            transform: scale(1.05);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: clamp(22px, 5vw, 28px);
+            font-weight: 700;
+            color: #ff3333;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .header .subtitle {
+            font-size: clamp(14px, 3vw, 16px);
+            color: #d1d1d1;
+            margin-top: 1.5vw;
+            font-weight: 300;
+        }
+        .content {
+            padding: clamp(20px, 5vw, 30px);
+            color: #2c2c2c;
+        }
+        .order-alert {
+            background: linear-gradient(135deg, #ff3333, #ff6666);
+            color: #ffffff;
+            padding: clamp(15px, 4vw, 20px);
+            border-radius: 10px;
+            margin-bottom: clamp(20px, 5vw, 25px);
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .order-alert h2 {
+            margin: 0 0 2vw 0;
+            font-size: clamp(20px, 5vw, 24px);
+            font-weight: 600;
+        }
+        .order-alert h4 {
+            margin: 0 0 2vw 0;
+            font-size: clamp(16px, 4vw, 18px);
+            font-weight: 500;
+        }
+        .order-alert .order-time {
+            font-size: clamp(13px, 3.5vw, 15px);
+            opacity: 0.9;
+            font-style: italic;
+        }
+        .order-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: clamp(15px, 4vw, 25px);
+            margin-bottom: clamp(20px, 5vw, 25px);
+        }
+        .info-card {
+            background-color: #f9fafb;
+            padding: clamp(15px, 4vw, 20px);
+            border-radius: 10px;
+            border-left: 5px solid #ff3333;
+            transition: transform 0.2s ease;
+        }
+        .info-card:hover {
+            transform: translateY(-3px);
+        }
+        .info-card h3 {
+            margin: 0 0 3vw 0;
+            color: #ff3333;
+            font-size: clamp(16px, 4vw, 18px);
+            font-weight: 600;
+        }
+        .info-card p {
+            margin: 1.5vw 0;
+            font-size: clamp(13px, 3.5vw, 15px);
+            line-height: 1.5;
+            color: #333333;
+        }
+        .order-items {
+            margin: clamp(20px, 5vw, 25px) 0;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .order-items h3 {
+            background: linear-gradient(90deg, #ff3333, #ff4d4d);
+            color: #ffffff;
+            padding: clamp(12px, 3vw, 15px) clamp(15px, 4vw, 20px);
+            margin: 0;
+            font-size: clamp(16px, 4vw, 18px);
+            font-weight: 600;
+        }
+        .order-items ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            background-color: #ffffff;
+        }
+        .order-items li {
+            padding: clamp(12px, 3vw, 15px) clamp(15px, 4vw, 20px);
+            border-bottom: 1px solid #f0f0f0;
+            font-size: clamp(13px, 3.5vw, 15px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+        .order-items li:hover {
+            background-color: #f9fafb;
+        }
+        .order-items li:last-child {
+            border-bottom: none;
+        }
+        .item-details {
+            flex: 1;
+        }
+        .item-price {
+            font-weight: 600;
+            color: #ff3333;
+        }
+        .financial-summary {
+            background: linear-gradient(135deg, #2c2c2c, #3d3d3d);
+            color: #e40808;
+            padding: clamp(20px, 5vw, 25px);
+            border-radius: 10px;
+            margin: clamp(20px, 5vw, 25px) 0;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            border: 2px solid #ff3333;
+        }
+        .financial-summary h3 {
+            margin: 0 0 clamp(15px, 4vw, 20px) 0;
+            color: #ff3333;
+            font-size: clamp(18px, 4.5vw, 20px);
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin: clamp(8px, 2vw, 10px) 0;
+            padding: clamp(6px, 1.5vw, 8px) 0;
+            border-bottom: 1px solid #555555;
+            font-size: clamp(14px, 3.5vw, 16px);
+        }
+        .summary-row:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: clamp(16px, 4vw, 18px);
+            color: #ff3333;
+            border-top: 2px solid #ff3333;
+            padding-top: clamp(10px, 2.5vw, 12px);
+            margin-top: clamp(10px, 2.5vw, 12px);
+        }
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: clamp(15px, 4vw, 20px);
+            justify-content: center;
+            margin: clamp(25px, 6vw, 30px) 0;
+        }
+        .button {
+            display: inline-block;
+            padding: clamp(12px, 3vw, 14px) clamp(25px, 6vw, 30px);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: clamp(14px, 3.5vw, 16px);
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            width: clamp(150px, 40vw, 200px);
+            touch-action: manipulation;
+        }
+        .button-primary {
+            background: linear-gradient(45deg, #ff3333, #ff4d4d);
+            color: #ffffff;
+        }
+        .button-primary:hover {
+            background: linear-gradient(45deg, #cc0000, #e60000);
+            transform: translateY(-2px);
+        }
+        .button-warning {
+            background: linear-gradient(45deg, #ffc107, #ffd54f);
+            color: #1a1a1a;
+        }
+        .button-warning:hover {
+            background: linear-gradient(45deg, #e0a800, #ffca28);
+            transform: translateY(-2px);
+        }
+        .action-required {
+            background-color: #fff8e1;
+            border: 1px solid #ffecb3;
+            padding: clamp(15px, 4vw, 20px);
+            border-radius: 10px;
+            margin: clamp(20px, 5vw, 25px) 0;
+            text-align: center;
+        }
+        .action-required h4 {
+            margin: 0 0 clamp(10px, 2.5vw, 12px) 0;
+            color: #d84315;
+            font-size: clamp(16px, 4vw, 18px);
+            font-weight: 600;
+        }
+        .action-required p {
+            margin: 0;
+            font-size: clamp(13px, 3.5vw, 15px);
+            color: #744210;
+        }
+        .footer {
+            background: linear-gradient(135deg, #1a1a1a, #2c2c2c);
+            padding: clamp(20px, 5vw, 25px);
+            text-align: center;
+            font-size: clamp(12px, 3vw, 13px);
+            color: #d1d1d1;
+            border-top: 1px solid #444444;
+        }
+        .footer a {
+            color: #ff3333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        .footer a:hover {
+            color: #ff6666;
+        }
+        @media screen and (max-width: 768px) {
+            .order-info {
+                grid-template-columns: 1fr;
+            }
+            .button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 2vw;
+            }
+            .container {
+                width: 98%;
+            }
+            .header h1 {
+                font-size: clamp(20px, 6vw, 24px);
+            }
+            .financial-summary h3 {
+                font-size: clamp(16px, 5vw, 18px);
+            }
+            .order-alert h2 {
+                font-size: clamp(18px, 5.5vw, 22px);
+            }
+            .button {
+                padding: clamp(10px, 3vw, 12px) clamp(20px, 5vw, 25px);
+                font-size: clamp(13px, 4vw, 15px);
+            }
+        }
+        @media screen and (min-width: 1200px) {
+            .container {
+                max-width: 800px;
+            }
+            .header .logo {
+                max-width: 160px;
+            }
+            .header h1 {
+                font-size: 30px;
+            }
+            .financial-summary h3 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="urgent-banner">
+        🚨 URGENT: NEW ORDER REQUIRES IMMEDIATE ATTENTION 🚨
+    </div>
+
+    <div class="header">
+        <img src="https://pizzapoint.com/logo.png" alt="Pizza Point Logo" class="logo">
+        <h1>NEW ORDER ALERT</h1>
+        <div class="subtitle">Admin Dashboard Notification</div>
+    </div>
+
+    <div class="content">
+        <div class="order-alert">
+            <h2>[Order Sequence] Received</h2>
+            <h4>Order ID:[Order ID]</h4>
+            <div class="order-time">Placed on [Order DateTime]</div>
+        </div>
+
+        <div class="order-info">
+            <div class="info-card">
+                <h3>👤 Customer
+
+                    System: Information</h3>
+                <p><strong>Name:</strong> [Customer Name]</p>
+                <p><strong>Email:</strong> [Customer Email]</p>
+                <p><strong>Phone:</strong> [Customer Phone]</p>
+                <p><strong>Order Type:</strong> [Order Type]</p>
+                <p><strong>Payment Method:</strong> [Payment Method]</p>
+            </div>
+
+            <div class="info-card">
+                <h3>📍 Delivery Details</h3>
+                <p><strong>Address:</strong> [Delivery Address]</p>
+                <p><strong>Special Instructions:</strong> [Special Instructions]</p>
+                <p><strong>Intercom:</strong> [Intercom]</p>
+                <p><strong>Floor:</strong> [Floor]</p>
+                <p><strong>Apartment No:</strong> [Apartment No]</p>
+                <p><strong>Google Maps:</strong> <a href="[Google Maps Link]">[Delivery Address]</a></p>
+            </div>
+        </div>
+
+        <div class="order-items">
+            <h3>🍕 Order Items ([Total Items] items)</h3>
+            <ul>
+                [Order Items]
+            </ul>
+        </div>
+
+        <div class="financial-summary">
+            <h3>💰 Financial Summary</h3>
+            <div class="summary-row">
+                <span>Cart Total:</span>
+                <span>Ft [Total Cart Amount]</span>
+            </div>
+            <div class="summary-row">
+                <span>Packaging fee:</span>
+                <span>Ft [Packaging Fee]</span>
+            </div>
+            <div class="summary-row">
+                <span>Delivery Fee:</span>
+                <span>Ft [Delivery Fee]</span>
+            </div>
+            <div class="summary-row">
+                <span>Service Fee:</span>
+                <span>Ft [Service Fee]</span>
+            </div>
+            <div class="summary-row">
+                <span>Bottle Deposit:</span>
+                <span>Ft [Bottle Deposit Fee]</span>
+            </div>
+            <div class="summary-row">
+                <span>Discount:</span>
+                <span>Ft [Discount Amount]</span>
+            </div>
+            <div class="summary-row">
+                <span>TOTAL AMOUNT:</span>
+                <span>Ft [Total Price]</span>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <a href="[Admin Dashboard URL]" class="button button-primary">View in Dashboard</a>
+            <a href="[Customer Contact URL]" class="button button-warning">Contact Customer</a>
+        </div>
+
+        <div class="action-required">
+            <h4>⚠️ Action Required</h4>
+            <p>
+                Please process this order within 15 minutes to maintain customer satisfaction.
+                Expected preparation time: [Estimated Prep Time] minutes.
+            </p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2025 Pizza Point Admin System. All rights reserved.</p>
+        <p>
+            <a href="[Admin Dashboard URL]">Dashboard</a> |
+            <a href="[Settings URL]">Settings</a> |
+            <a href="[Support URL]">Support</a>
+        </p>
+        <p>This is an automated system notification. Please do not reply to this email.</p>
+    </div>
+</div>
+</body>
+</html>
