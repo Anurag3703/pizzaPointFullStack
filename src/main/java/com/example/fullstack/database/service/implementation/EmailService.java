@@ -5,6 +5,8 @@ import com.example.fullstack.database.dto.ExtraDTO;
 import com.example.fullstack.database.dto.OrderDTO;
 import com.example.fullstack.database.dto.OrderItemDTO;
 import com.example.fullstack.database.model.OrderType;
+import com.example.fullstack.security.model.UserSecurity;
+import com.example.fullstack.security.repository.SecurityUserRepository;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,11 +21,14 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
+
 public class EmailService {
     private final JavaMailSender mailSender;
+    private final SecurityUserRepository securityUserRepository;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -32,8 +37,9 @@ public class EmailService {
     private String adminEmail;
 
     @Autowired
-    public EmailService(JavaMailSender mailSender) {
+    public EmailService(JavaMailSender mailSender,SecurityUserRepository securityUserRepository) {
         this.mailSender = mailSender;
+        this.securityUserRepository = securityUserRepository;
     }
 
     private String buildOrderItemsHtml(List<OrderItemDTO> orderItems) {
@@ -238,8 +244,11 @@ public class EmailService {
     }
 
     public void sendNewOrderAdminEmail(OrderDTO order) throws Exception {
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        List<String> adminEmails = getAllAdminEmails();
+
+        if (adminEmails.isEmpty()) {
+            return; // No admins to notify
+        }
 
         ClassPathResource resource = new ClassPathResource("templates/email/admin-new-order-template.html");
         StringBuilder htmlContent = new StringBuilder();
@@ -327,12 +336,23 @@ public class EmailService {
         // Conditionally add fees and discount only if they're greater than zero
         finalContent = conditionallyAddFeesAdmin(finalContent, order);
 
-        helper.setFrom(fromEmail);
-        helper.setTo(adminEmail);
-        helper.setSubject("PIZZA POINT - Urgent: New Order #" + (order.getOrderSequence() != null ? order.getOrderSequence() : "N/A"));
-        helper.setText(finalContent, true);
+        for (String adminEmail : adminEmails) {
+            try {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        mailSender.send(message);
+                helper.setFrom(fromEmail);
+                helper.setTo(adminEmail);
+                helper.setSubject("PIZZA POINT - Urgent: New Order #" + (order.getOrderSequence() != null ? order.getOrderSequence() : "N/A"));
+                helper.setText(finalContent, true);
+
+                mailSender.send(message);
+            } catch (Exception e) {
+                // Log error but continue with other admins
+                System.err.println("Failed to send email to admin: " + adminEmail);
+                e.printStackTrace();
+            }
+        }
     }
 
     private String conditionallyAddFees(String content, OrderDTO order) {
@@ -459,5 +479,9 @@ public class EmailService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public List<String> getAllAdminEmails(){
+        return securityUserRepository.findEmailsByRole("ADMIN");
     }
 }

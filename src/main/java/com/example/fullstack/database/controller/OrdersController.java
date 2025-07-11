@@ -2,10 +2,7 @@ package com.example.fullstack.database.controller;
 import com.example.fullstack.database.dto.OrderDTO;
 import com.example.fullstack.database.dto.service.implementation.OrderDTOServiceImpl;
 import com.example.fullstack.database.model.*;
-import com.example.fullstack.database.service.implementation.EmailService;
-import com.example.fullstack.database.service.implementation.OrderItemServiceImpl;
-import com.example.fullstack.database.service.implementation.OrdersServiceImpl;
-import com.example.fullstack.database.service.implementation.WhatsAppService;
+import com.example.fullstack.database.service.implementation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
@@ -32,12 +29,13 @@ public class OrdersController {
     private final EmailService emailService;
     private final OrderDTOServiceImpl orderDTOServiceImpl;
     private final WhatsAppService whatsAppService;
+    private final AsyncOrderService asyncOrderService;
     public OrdersController(OrdersServiceImpl ordersServiceImpl,
                             OrderItemServiceImpl orderItemServiceImpl,
                             SimpMessagingTemplate messagingTemplate,
                             EmailService emailService,
                             OrderDTOServiceImpl orderDTOServiceImpl,
-                            WhatsAppService whatsAppService
+                            WhatsAppService whatsAppService,AsyncOrderService asyncOrderService
 
                             ) {
         this.ordersServiceImpl = ordersServiceImpl;
@@ -46,6 +44,7 @@ public class OrdersController {
         this.emailService = emailService;
         this.orderDTOServiceImpl = orderDTOServiceImpl;
         this.whatsAppService = whatsAppService;
+        this.asyncOrderService = asyncOrderService;
     }
 
     @PostMapping
@@ -158,20 +157,10 @@ public class OrdersController {
             Orders order = ordersServiceImpl.confirmCheckout(orderId, paymentMethod, orderType, cardToken);
             OrderDTO responseDTO = orderDTOServiceImpl.convertToDTO(order);
 
-            messagingTemplate.convertAndSend("/topic/orders/" + order.getOrderId(), "Your order has been placed successfully!");
-            messagingTemplate.convertAndSend("/topic/admin", "New order received: " + order.getOrderId());
+            // Process all notifications and emails asynchronously
+            asyncOrderService.processOrderNotifications(order);
+            asyncOrderService.processOrderEmails(order);
 
-            if (responseDTO.getStatus() == Status.PLACED) {
-                whatsAppService.sendNewOrderNotification(order);
-
-            }
-            try{
-                if(responseDTO.getStatus() == Status.PLACED) {
-                    emailService.sendNewOrderAdminEmail(responseDTO);
-                }
-            }catch (Exception e){
-                throw new RuntimeException("Coudn't send the email" + e.getMessage());
-            }
 
             return ResponseEntity.ok(responseDTO);
         } catch (RuntimeException e) {
@@ -190,12 +179,9 @@ public class OrdersController {
             Orders order = ordersServiceImpl.retryPayment(orderId, cardToken);
             OrderDTO responseDTO = orderDTOServiceImpl.convertToDTO(order);
 
-            messagingTemplate.convertAndSend("/topic/orders/" + order.getOrderId(), "Your order has been placed successfully!");
-            messagingTemplate.convertAndSend("/topic/admin", "New order received: " + order.getOrderId());
-
-            if (responseDTO.getStatus() == Status.PLACED) {
-                whatsAppService.sendNewOrderNotification(order);
-            }
+            // Process all notifications and emails asynchronously
+            asyncOrderService.processOrderNotifications(order);
+            asyncOrderService.processOrderEmails(order);
 
             return ResponseEntity.ok(responseDTO);
         } catch (RuntimeException e) {
@@ -341,12 +327,9 @@ public class OrdersController {
             Orders order = ordersServiceImpl.confirmCheckoutWithDiscount(orderId, paymentMethod, orderType, cardToken,discountCode);
             OrderDTO responseDTO = orderDTOServiceImpl.convertToDTO(order);
 
-            messagingTemplate.convertAndSend("/topic/orders/" + order.getOrderId(), "Your order has been placed successfully!");
-            messagingTemplate.convertAndSend("/topic/admin", "New order received: " + order.getOrderId());
-
-            if (responseDTO.getStatus() == Status.PLACED) {
-                whatsAppService.sendNewOrderNotification(order);
-            }
+            // Process all notifications and emails asynchronously
+            asyncOrderService.processOrderNotifications(order);
+            asyncOrderService.processOrderEmails(order);
 
             return ResponseEntity.ok(responseDTO);
         } catch (RuntimeException e) {
