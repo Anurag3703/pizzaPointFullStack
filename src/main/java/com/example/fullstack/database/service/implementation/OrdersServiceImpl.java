@@ -81,9 +81,9 @@ public class OrdersServiceImpl implements OrdersService {
     }
 
     @Override
-    public List<Orders> addAllOrders(List<Orders> orders) {
+    public void addAllOrders(List<Orders> orders) {
         if (orders.isEmpty()) {
-            return orders;
+            return;
         }
 
         // Pre-process all orders to avoid repeated sequence generation
@@ -92,7 +92,7 @@ public class OrdersServiceImpl implements OrdersService {
                 order.setOrderSequence(orderSequenceUtil.getNextOrderSequence());
             }
         });
-        return ordersRepository.saveAll(orders);
+        ordersRepository.saveAll(orders);
     }
 
     @Override
@@ -200,6 +200,25 @@ public class OrdersServiceImpl implements OrdersService {
     public Orders confirmCheckoutWithDiscount(String orderId, PaymentMethod paymentMethod, OrderType orderType,
                                               String cardToken, String discountCode) {
         return confirmCheckoutInternal(orderId, paymentMethod, orderType, cardToken, discountCode);
+    }
+
+    @Override
+    public void validateDiscountCode(String discountCode) {
+        if (discountCode.length() > 50) { // Assuming reasonable code length limit
+            throw new RuntimeException("Invalid discount code format");
+        }
+
+        Discount discount = discountRepository.findByDiscountCodeAndActiveTrue(discountCode)
+                .orElseThrow(() -> new RuntimeException(buildErrorMessage("Invalid or inactive discount code: ", discountCode)));
+
+        User user = getCurrentAuthenticatedUser();
+
+        // Validate in order of likelihood to fail (most likely to least likely)
+        validateDiscountTiming(discount);
+        validateDiscountUsageLimit(discount);
+        validateDiscountUserEligibility(discount, user);
+        validateFirstOrderDiscount(discount, user);
+
     }
 
     @Override
@@ -613,7 +632,7 @@ public class OrdersServiceImpl implements OrdersService {
 
     // ================== OPTIMIZED DISCOUNT METHODS ==================
 
-    private Discount validateAndApplyDiscount(String discountCode, User user, Orders order) {
+    public Discount validateAndApplyDiscount(String discountCode, User user, Orders order) {
         // Early validation - check code format first
         if (discountCode.length() > 50) { // Assuming reasonable code length limit
             throw new RuntimeException("Invalid discount code format");
@@ -636,6 +655,8 @@ public class OrdersServiceImpl implements OrdersService {
 
         return discount;
     }
+
+
 
     private void validateDiscountTiming(Discount discount) {
         LocalDateTime now = LocalDateTime.now();

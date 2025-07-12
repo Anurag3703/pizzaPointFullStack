@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -338,6 +339,23 @@ public class OrdersController {
 
 
     }
+
+
+
+    @PostMapping("/validate-code")
+    public ResponseEntity<?> validateDiscountCode(@RequestParam String discountCode) {
+        try{
+            ordersServiceImpl.validateDiscountCode(discountCode);
+            Map<String, Boolean>  response = new HashMap<>();
+            response.put("valid", true);
+            return ResponseEntity.ok(response);
+        }catch (Exception e){
+            Map<String, String>  response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
 
 
 
